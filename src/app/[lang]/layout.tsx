@@ -12,9 +12,53 @@ export async function generateStaticParams() {
 }
 
 export const metadata: Metadata = {
-  title: 'NRB Europe | Trusted News for NRBs in Europe',
+  title: {
+    default: 'NRB Europe | Trusted News for NRBs in Europe',
+    template: '%s | NRB Europe'
+  },
   description: 'Daily news, immigration updates, job alerts, and community stories for Non‑Resident Bangladeshis across Europe.',
-  keywords: ['NRB', 'Europe', 'Bangladeshi news', 'Immigration', 'Jobs abroad'],
+  keywords: ['NRB', 'Europe', 'Bangladeshi news', 'Immigration', 'Jobs abroad', 'Non-Resident Bangladeshi', 'Europe news', 'Community'],
+  authors: [{ name: 'NRB Europe Team' }],
+  creator: 'NRB Europe',
+  publisher: 'NRB Europe',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://nrbeurope.com',
+    siteName: 'NRB Europe',
+    title: 'NRB Europe | Trusted News for NRBs in Europe',
+    description: 'Daily news, immigration updates, job alerts, and community stories for Non‑Resident Bangladeshis across Europe.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'NRB Europe',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NRB Europe | Trusted News for NRBs in Europe',
+    description: 'Daily news, immigration updates, job alerts, and community stories for Non‑Resident Bangladeshis across Europe.',
+    images: ['/twitter-image.jpg'],
+    creator: '@nrbeurope',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+    yandex: 'your-yandex-verification-code',
+  },
 }
 
 export default function RootLayout({

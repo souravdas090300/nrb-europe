@@ -43,16 +43,7 @@ export default async function Home({
           {articles.map((article: any) => (
             <ArticleCard
               key={article._id}
-              title={article.title}
-              description={article.excerpt || ''}
-              imageUrl={article.mainImage ? article.mainImage : 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&q=80'}
-              slug={article.slug.current}
-              author={article.author}
-              date={new Date(article.publishedAt).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
+              article={article}
             />
           ))}
         </div>
