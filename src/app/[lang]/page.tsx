@@ -47,6 +47,7 @@ export default async function Home({
             <ArticleCard
               key={article._id}
               article={article}
+              lang={lang}
             />
           ))}
         </div>
