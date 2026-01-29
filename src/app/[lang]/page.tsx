@@ -4,6 +4,9 @@ import { Locale } from '@/lib/i18n-config'
 import { client } from '@/lib/sanity/client'
 import { allArticlesQuery } from '@/lib/sanity/queries'
 
+// ISR: Revalidate every 60 seconds for fresh content without rebuilds
+export const revalidate = 60
+
 async function getArticles() {
   try {
     const articles = await client.fetch(allArticlesQuery)

@@ -3,6 +3,7 @@ import NavBar from './NavBar';
 import LanguageSwitcher from './LanguageSwitcher';
 import SearchBar from './SearchBar';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Locale } from '@/lib/i18n-config';
 
 const Header = ({ lang }: { lang: Locale }) => {
@@ -11,9 +12,21 @@ const Header = ({ lang }: { lang: Locale }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Row */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-4">
-          <div className="flex items-center">
-            <Link href={`/${lang}`} className="text-2xl font-bold text-red-700">
-              NRB Europe
+          <div className="flex items-center gap-2">
+            <Link href={`/${lang}`} className="flex items-center gap-2">
+              {/* Logo Image */}
+              <Image 
+                src="/logo.png" 
+                alt="NRB Europe Logo" 
+                width={50} 
+                height={50}
+                className="object-contain"
+                priority
+              />
+              {/* Site Name */}
+              <span className="text-2xl font-bold text-red-700">
+                NRB Europe
+              </span>
             </Link>
             <span className="ml-2 text-xs bg-red-600 text-white px-2 py-1 rounded">
               LIVE
