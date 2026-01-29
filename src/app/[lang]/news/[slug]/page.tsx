@@ -4,13 +4,52 @@ import { urlFor } from '@/lib/sanity/client'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { Locale } from '@/lib/i18n-config'
+import type { Metadata } from 'next'
 
 export const revalidate = 60 // Auto-update every 60 seconds
+export const dynamic = 'force-static' // Force static generation for speed
 
 interface PageProps {
   params: {
     slug: string
     lang: Locale
+  }
+}
+
+// Generate SEO metadata at build time
+export async function generateMetadata(
+  { params }: PageProps
+): Promise<Metadata> {
+  const article = await client.fetch(articleBySlugQuery, {
+    slug: params.slug,
+  })
+
+  if (!article) {
+    return {
+      title: 'Article not found - NRB Europe',
+    }
+  }
+
+  const description = article.excerpt || article.body?.[0]?.children?.[0]?.text?.slice(0, 150) || ''
+  const imageUrl = article.mainImage ? urlFor(article.mainImage).width(1200).height(630).url() : ''
+
+  return {
+    title: article.title,
+    description: description,
+    openGraph: {
+      title: article.title,
+      description: description,
+      images: imageUrl ? [{ url: imageUrl, width: 1200, height: 630 }] : [],
+      type: 'article',
+      publishedTime: article.publishedAt,
+      authors: [article.author?.name || 'NRB Europe'],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: article.title,
+      description: description,
+      images: imageUrl ? [imageUrl] : [],
+    },
   }
 }
 
