@@ -2,14 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { i18n, type Locale } from '@/lib/i18n-config'
-
-const languageNames = {
-  en: 'English',
-  bn: 'বাংলা',
-  es: 'Español',
-  de: 'Deutsch',
-  fr: 'Français',
-}
+import { LANGUAGE_NAMES } from '@/lib/data/languages'
 
 export default function LanguageSwitcher() {
   const pathname = usePathname()
@@ -35,7 +28,7 @@ export default function LanguageSwitcher() {
       >
         {i18n.locales.map((locale) => (
           <option key={locale} value={locale}>
-            {languageNames[locale]}
+            {LANGUAGE_NAMES[locale]}
           </option>
         ))}
       </select>
