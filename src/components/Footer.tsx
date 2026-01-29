@@ -67,6 +67,4 @@ const Footer = async ({ lang }: { lang: Locale }) => {
   );
 };
 
-export default Footer;;
-
 export default Footer;
