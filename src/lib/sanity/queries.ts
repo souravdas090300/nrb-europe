@@ -23,20 +23,20 @@ export const articleBySlugQuery = `*[_type == "post" && slug.current == $slug][0
   slug,
   excerpt,
   body,
-  mainImage,
+  "mainImage": mainImage,
+  "featuredImage": mainImage{
+    ...,
+    "caption": caption,
+    "attribution": attribution
+  },
   publishedAt,
   isBreaking,
   isFeatured,
+  "category": categories[0]->title,
   "categories": categories[]->{ title, slug, color },
-  "author": author->{
-    name,
-    slug,
-    image,
-    bio,
-    twitter,
-    linkedin,
-    email
-  },
+  "author": author->name,
+  "authorImage": author->image,
+  "authorBio": author->bio[0].children[0].text,
   seo
 }`
 
@@ -92,4 +92,16 @@ export const allAuthorsQuery = `*[_type == "author"] | order(name asc) {
   image,
   bio,
   "postCount": count(*[_type == "post" && references(^._id)])
+}`
+
+// Fetch related articles by category
+export const relatedArticlesQuery = `*[
+  _type == "post" && 
+  $category in categories[]->title && 
+  slug.current != $currentSlug
+] | order(publishedAt desc)[0...6] {
+  _id,
+  title,
+  slug,
+  publishedAt
 }`
