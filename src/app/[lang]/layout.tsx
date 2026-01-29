@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -71,6 +72,7 @@ export default function RootLayout({
   return (
     <html lang={params.lang}>
       <body className={`${inter.className} bg-gray-50 text-gray-900`}>
+        <BreakingNewsTicker />
         <Header lang={params.lang} />
         <div className="min-h-screen">{children}</div>
         <Footer lang={params.lang} />

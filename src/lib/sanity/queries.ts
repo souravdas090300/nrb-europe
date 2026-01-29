@@ -105,3 +105,21 @@ export const relatedArticlesQuery = `*[
   slug,
   publishedAt
 }`
+
+// Fetch category by slug
+export const categoryBySlugQuery = `*[_type == "category" && slug.current == $slug][0] {
+  _id,
+  title,
+  slug,
+  description,
+  color
+}`
+
+// Fetch trending articles
+export const trendingArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[0...5] {
+  _id,
+  title,
+  slug,
+  "category": categories[0]->title,
+  publishedAt
+}`
