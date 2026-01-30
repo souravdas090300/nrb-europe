@@ -3,23 +3,30 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   const articles = await client.fetch(`
-    *[_type == "post"] | order(publishedAt desc)[0..20] {
+    *[_type == "post"] | order(publishedAt desc)[0..49] {
       title,
       slug,
       publishedAt,
-      excerpt
+      excerpt,
+      "author": author->name,
+      "categories": categories[]->title,
+      "imageUrl": mainImage.asset->url
     }
   `)
 
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://nrb-europe.vercel.app'
 
   const rss = `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0">
+<rss version="2.0" 
+     xmlns:atom="http://www.w3.org/2005/Atom"
+     xmlns:media="http://search.yahoo.com/mrss/"
+     xmlns:dc="http://purl.org/dc/elements/1.1/">
 <channel>
-  <title>NRB Europe News</title>
+  <title>NRB Europe - Latest News</title>
   <link>${baseUrl}</link>
-  <description>Latest news from NRB Europe</description>
+  <description>Breaking news and analysis for Non-Resident Bangladeshis in Europe</description>
   <language>en</language>
+  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />
   <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
 
   ${articles
@@ -28,9 +35,12 @@ export async function GET() {
     <item>
       <title>${escapeXml(article.title)}</title>
       <link>${baseUrl}/en/news/${article.slug.current}</link>
-      <pubDate>${new Date(article.publishedAt).toUTCString()}</pubDate>
-      <description>${escapeXml(article.excerpt || '')}</description>
       <guid isPermaLink="true">${baseUrl}/en/news/${article.slug.current}</guid>
+      <description>${escapeXml(article.excerpt || '')}</description>
+      <pubDate>${new Date(article.publishedAt).toUTCString()}</pubDate>
+      <dc:creator>${escapeXml(article.author || 'NRB Europe Editorial Team')}</dc:creator>
+      ${article.categories?.map((cat: string) => `<category>${escapeXml(cat)}</category>`).join('\n      ') || ''}
+      ${article.imageUrl ? `<media:content url="${article.imageUrl}" medium="image" />` : ''}
     </item>
   `
     )

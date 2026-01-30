@@ -3,10 +3,13 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   const articles = await client.fetch(`
-    *[_type == "post"] | order(publishedAt desc)[0..49] {
+    *[_type == "post"] | order(publishedAt desc)[0..999] {
       slug,
       title,
-      publishedAt
+      publishedAt,
+      _updatedAt,
+      "keywords": categories[]->title,
+      "category": categories[0]->title
     }
   `)
 
@@ -20,6 +23,7 @@ ${articles
     (article: any) => `
   <url>
     <loc>${baseUrl}/en/news/${article.slug.current}</loc>
+    <lastmod>${article._updatedAt || article.publishedAt}</lastmod>
     <news:news>
       <news:publication>
         <news:name>NRB Europe</news:name>
@@ -27,6 +31,7 @@ ${articles
       </news:publication>
       <news:publication_date>${article.publishedAt}</news:publication_date>
       <news:title>${escapeXml(article.title)}</news:title>
+      ${article.keywords && article.keywords.length > 0 ? `<news:keywords>${article.keywords.join(', ')}</news:keywords>` : ''}
     </news:news>
   </url>
 `

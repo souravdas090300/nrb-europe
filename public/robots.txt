@@ -1,0 +1,18 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://nrb-europe.vercel.app/sitemap.xml
+Sitemap: https://nrb-europe.vercel.app/news-sitemap.xml
+
+# Disallow admin routes
+Disallow: /api/
+Disallow: /studio/
+Disallow: /admin/
+
+# Allow RSS feed
+Allow: /rss.xml
+
+# Crawl-delay
+Crawl-delay: 1

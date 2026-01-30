@@ -60,6 +60,32 @@ const nextConfig = {
           }
         ],
       },
+      {
+        source: '/news-sitemap.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/xml',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate',
+          },
+        ],
+      },
+      {
+        source: '/rss.xml',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/rss+xml',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate',
+          },
+        ],
+      },
     ]
   },
 };
