@@ -6,6 +6,7 @@ import Footer from '@/components/Footer'
 import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
+import OrganizationStructuredData from '@/components/SEO/OrganizationStructuredData'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -86,6 +87,9 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="news_keywords" content="politics,business,immigration,community,europe,bangladesh" />
+        <meta name="original-source" content="NRB Europe" />
+        <OrganizationStructuredData />
       </head>
       <body className={`${inter.className} bg-gray-50 text-gray-900`}>
         <GoogleAnalytics />
