@@ -7,16 +7,10 @@
  * https://github.com/sanity-io/next-sanity
  */
 
-import { NextStudio } from 'next-sanity'
+'use client'
+
+import { NextStudio } from 'next-sanity/studio'
 import config from '../../../../sanity.config'
-
-export const dynamic = 'force-dynamic'
-
-// Metadata for the studio page
-export const metadata = {
-  title: 'Sanity Studio',
-  description: 'Content management for NRB Europe',
-}
 
 export default function StudioPage() {
   return <NextStudio config={config} />
