@@ -1,14 +1,26 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 
-export default function SearchBar() {
+interface SearchBarProps {
+  placeholder?: string
+  loading?: string
+  noResults?: string
+}
+
+export default function SearchBar({ 
+  placeholder = 'Search news...',
+  loading: loadingText = 'Searching...',
+  noResults = 'No results found'
+}: SearchBarProps = {}) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [showResults, setShowResults] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  const lang = pathname.split('/')[1] || 'en'
 
   const searchArticles = async (searchQuery: string) => {
     if (searchQuery.length < 2) {
@@ -42,7 +54,7 @@ export default function SearchBar() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query)}`)
+      router.push(`/${lang}/search?q=${encodeURIComponent(query)}`)
       setShowResults(false)
     }
   }
@@ -58,7 +70,7 @@ export default function SearchBar() {
             setShowResults(true)
           }}
           onFocus={() => setShowResults(true)}
-          placeholder="Search news..."
+          placeholder={placeholder}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
         />
         <button
@@ -73,17 +85,17 @@ export default function SearchBar() {
       {showResults && (query.length >= 2) && (
         <div className="absolute z-50 w-full mt-1 bg-white border rounded-lg shadow-lg max-h-96 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-600">Searching...</div>
+            <div className="p-4 text-center text-gray-600">{loadingText}</div>
           ) : results.length === 0 ? (
             <div className="p-4 text-center text-gray-600">
-              {query.length >= 2 ? 'No results found' : 'Type at least 2 characters'}
+              {query.length >= 2 ? noResults : 'Type at least 2 characters'}
             </div>
           ) : (
             <div>
               {results.slice(0, 8).map((article) => (
                 <a
                   key={article._id}
-                  href={`/article/${article.slug.current}`}
+                  href={`/${lang}/article/${article.slug.current}`}
                   className="block p-4 hover:bg-gray-50 border-b last:border-b-0"
                   onClick={() => setShowResults(false)}
                 >
@@ -101,7 +113,7 @@ export default function SearchBar() {
               ))}
               {results.length > 8 && (
                 <a
-                  href={`/search?q=${encodeURIComponent(query)}`}
+                  href={`/${lang}/search?q=${encodeURIComponent(query)}`}
                   className="block p-4 text-center text-red-600 hover:bg-gray-50 font-semibold"
                   onClick={() => setShowResults(false)}
                 >

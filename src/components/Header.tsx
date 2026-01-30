@@ -5,8 +5,11 @@ import SearchBar from './SearchBar';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Locale } from '@/lib/i18n-config';
+import { getDictionary } from '@/lib/get-dictionary';
 
-const Header = ({ lang }: { lang: Locale }) => {
+const Header = async ({ lang }: { lang: Locale }) => {
+  const dictionary = await getDictionary(lang);
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,13 +37,17 @@ const Header = ({ lang }: { lang: Locale }) => {
           </div>
           
           <div className="w-full md:w-auto md:max-w-md flex-1 md:flex-initial">
-            <SearchBar />
+            <SearchBar 
+              placeholder={dictionary.common.searchPlaceholder}
+              loading={dictionary.common.loading}
+              noResults={dictionary.common.noResults}
+            />
           </div>
 
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
             <button className="text-sm bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded">
-              Subscribe
+              {dictionary.common.subscribe}
             </button>
           </div>
         </div>

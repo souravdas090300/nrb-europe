@@ -32,27 +32,27 @@ const Footer = async ({ lang }: { lang: Locale }) => {
 
           {/* Legal */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Legal</h4>
+            <h4 className="text-lg font-semibold mb-4">{dictionary.footer.legal}</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><Link href={`/${lang}/privacy`} className="hover:text-white">Privacy Policy</Link></li>
-              <li><Link href={`/${lang}/terms`} className="hover:text-white">Terms of Service</Link></li>
-              <li><Link href={`/${lang}/about`} className="hover:text-white">About Us</Link></li>
-              <li><Link href={`/${lang}/contact`} className="hover:text-white">Contact</Link></li>
+              <li><Link href={`/${lang}/privacy`} className="hover:text-white">{dictionary.footer.privacyPolicy}</Link></li>
+              <li><Link href={`/${lang}/terms`} className="hover:text-white">{dictionary.footer.termsOfService}</Link></li>
+              <li><Link href={`/${lang}/about`} className="hover:text-white">{dictionary.footer.aboutUs}</Link></li>
+              <li><Link href={`/${lang}/contact`} className="hover:text-white">{dictionary.footer.contact}</Link></li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Stay Updated</h4>
-            <p className="text-gray-400 mb-3">Get daily news in your inbox.</p>
+            <h4 className="text-lg font-semibold mb-4">{dictionary.footer.stayUpdated}</h4>
+            <p className="text-gray-400 mb-3">{dictionary.footer.newsletterDesc}</p>
             <div className="flex">
               <input
                 type="email"
-                placeholder="Your email"
+                placeholder={dictionary.footer.emailPlaceholder}
                 className="flex-1 px-3 py-2 rounded-l text-gray-900"
               />
               <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-r">
-                Subscribe
+                {dictionary.common.subscribe}
               </button>
             </div>
           </div>
@@ -60,7 +60,7 @@ const Footer = async ({ lang }: { lang: Locale }) => {
 
         <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500 text-sm">
           <p>© {currentYear} NRB Europe. {dictionary.footer.rights}</p>
-          <p className="mt-1">Independent, professional journalism for the NRB community.</p>
+          <p className="mt-1">{dictionary.footer.tagline}</p>
         </div>
       </div>
     </footer>
