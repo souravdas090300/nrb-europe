@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
+import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -61,23 +62,38 @@ export const metadata: Metadata = {
     google: 'your-google-verification-code',
     yandex: 'your-yandex-verification-code',
   },
+  manifest: '/manifest.json',
+  themeColor: '#dc2626',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'NRB Europe',
+  },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
   params,
 }: {
   children: React.ReactNode
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale }>
 }) {
+  const { lang } = await params
+  
   return (
-    <html lang={params.lang}>
+    <html lang={lang}>
+      <head>
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+      </head>
       <body className={`${inter.className} bg-gray-50 text-gray-900`}>
         <GoogleAnalytics />
         <BreakingNewsTicker />
-        <Header lang={params.lang} />
+        <Header lang={lang} />
         <div className="min-h-screen">{children}</div>
-        <Footer lang={params.lang} />
+        <Footer lang={lang} />
+        <PWAInstallPrompt />
       </body>
     </html>
   )
