@@ -51,7 +51,7 @@ export default async function AMPArticlePage({ params }: PageProps) {
   const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${params.lang}/news/${article.slug}`
 
   return (
-    <html amp="">
+    <html lang={params.lang} {...({ amp: '' } as any)}>
       <head>
         <meta charSet="utf-8" />
         <title>{article.title} - NRB Europe</title>

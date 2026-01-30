@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
   try {
     const articles = await client.fetch(
       `*[_type == "post" && (
-        title match $query ||
-        excerpt match $query
+        title match $searchQuery ||
+        excerpt match $searchQuery
       )] | order(publishedAt desc)[0...20] {
         _id,
         title,
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         "category": categories[0]->title,
         "author": author->name
       }`,
-      { query: `*${query}*` }
+      { searchQuery: `*${query}*` }
     )
 
     return NextResponse.json(articles)

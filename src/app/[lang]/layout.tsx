@@ -6,7 +6,7 @@ import Footer from '@/components/Footer'
 import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
-import OrganizationStructuredData from '@/components/SEO/OrganizationStructuredData'
+import OrganizationStructuredData from '@/components/seo/OrganizationStructuredData'
 import { i18n, type Locale } from '@/lib/i18n-config'
 
 const inter = Inter({ subsets: ['latin'] })
@@ -77,9 +77,9 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ lang: Locale }>
+  params: Promise<{ lang: string }>
 }) {
-  const { lang } = await params
+  const { lang } = await params as { lang: Locale }
   
   return (
     <html lang={lang}>

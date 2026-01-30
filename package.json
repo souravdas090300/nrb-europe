@@ -7,6 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "setup-admin": "node scripts/setup-admin.js",
     "deploy-schema": "sanity schema deploy",
     "seo-audit": "node scripts/seo-audit.js"
@@ -26,11 +31,18 @@
     "styled-components": "^6.3.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
     "@types/ioredis": "^4.28.10",
+    "@types/jest": "^29.5.11",
     "@types/node": "^20.0.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "autoprefixer": "^10.4.16",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.0"
