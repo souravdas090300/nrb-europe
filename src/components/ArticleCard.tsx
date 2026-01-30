@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -110,3 +112,4 @@ function trackShare(platform: string, article: any) {
   if (shareUrls[platform]) {
     window.open(shareUrls[platform], '_blank', 'width=600,height=400');
   }
+}

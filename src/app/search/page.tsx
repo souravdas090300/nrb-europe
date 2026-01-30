@@ -18,10 +18,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   
   let articles = []
   if (query.length >= 2) {
-    articles = await client.fetch(
+    articles = await client.fetch<any[]>(
       `*[_type == "post" && (
-        title match $query ||
-        excerpt match $query
+        title match "*" + $query + "*" ||
+        excerpt match "*" + $query + "*"
       )] | order(publishedAt desc) {
         _id,
         title,
@@ -34,7 +34,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         "categoryColor": categories[0]->color,
         "author": author->name
       }`,
-      { query: `*${query}*` }
+      { query }
     )
   }
 

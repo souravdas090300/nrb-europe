@@ -1,7 +1,8 @@
-import { groq } from 'next-sanity'
+// GROQ queries for articles
+// Using template strings directly
 
 // Latest articles for homepage
-export const latestArticlesQuery = groq`
+export const latestArticlesQuery = `
   *[_type == "post"] | order(publishedAt desc)[0...10] {
     _id,
     title,
@@ -24,7 +25,7 @@ export const latestArticlesQuery = groq`
 `
 
 // Featured articles
-export const featuredArticlesQuery = groq`
+export const featuredArticlesQuery = `
   *[_type == "post" && isFeatured == true] | order(publishedAt desc)[0...3] {
     _id,
     title,
@@ -44,7 +45,7 @@ export const featuredArticlesQuery = groq`
 `
 
 // Breaking news
-export const breakingNewsQuery = groq`
+export const breakingNewsQuery = `
   *[_type == "post" && isBreaking == true] | order(publishedAt desc)[0...10] {
     _id,
     title,
@@ -54,7 +55,7 @@ export const breakingNewsQuery = groq`
 `
 
 // Single article by slug
-export const articleBySlugQuery = groq`
+export const articleBySlugQuery = `
   *[_type == "post" && slug.current == $slug][0] {
     _id,
     title,
