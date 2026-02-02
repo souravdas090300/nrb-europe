@@ -1,6 +1,7 @@
 import { client, urlFor } from '@/lib/sanity/client'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
+import type { Metadata } from 'next'
 
 // AMP component type declarations
 declare global {
@@ -18,7 +19,7 @@ interface PageProps {
   params: { lang: string; slug: string }
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const article = await client.fetch(
     `*[_type == "post" && slug.current == $slug][0] { title, excerpt }`,
     { slug: params.slug }

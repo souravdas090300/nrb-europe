@@ -5,6 +5,11 @@ import { i18n } from './lib/i18n-config'
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
   
+  // Skip middleware for studio routes
+  if (pathname.startsWith('/studio')) {
+    return NextResponse.next()
+  }
+  
   // Check if there is any supported locale in the pathname
   const pathnameIsMissingLocale = i18n.locales.every(
     (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
@@ -39,5 +44,5 @@ function getLocale(request: NextRequest): string {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|studio).*)'],
 }

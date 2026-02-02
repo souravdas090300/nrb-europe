@@ -1,4 +1,6 @@
-export const metadata = {
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
   title: 'About NRB Europe',
   description: 'Learn about NRB Europe - Your trusted news source for NRB communities in Europe',
 }

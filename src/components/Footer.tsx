@@ -1,70 +1,121 @@
-import React from 'react';
-import Link from 'next/link';
-import { getDictionary } from '@/lib/get-dictionary';
-import { Locale } from '@/lib/i18n-config';
+'use client'
 
-const Footer = async ({ lang }: { lang: Locale }) => {
-  const dictionary = await getDictionary(lang);
-  const currentYear = new Date().getFullYear();
+import React from 'react'
+import Link from 'next/link'
+import { Facebook, Twitter, Instagram, Youtube, Linkedin, Mail } from 'lucide-react'
+
+const Footer = ({ lang = 'en' }: { lang?: string }) => {
+  const currentYear = new Date().getFullYear()
+
+  const sections = [
+    {
+      title: 'News',
+      links: [
+        { label: 'World', href: `/${lang}/category/world` },
+        { label: 'Politics', href: `/${lang}/category/politics` },
+        { label: 'Business', href: `/${lang}/category/business` },
+        { label: 'Technology', href: `/${lang}/category/technology` },
+      ]
+    },
+    {
+      title: 'More',
+      links: [
+        { label: 'Sports', href: `/${lang}/category/sports` },
+        { label: 'Entertainment', href: `/${lang}/category/entertainment` },
+        { label: 'Health', href: `/${lang}/category/health` },
+        { label: 'Travel', href: `/${lang}/category/travel` },
+      ]
+    },
+    {
+      title: 'About',
+      links: [
+        { label: 'About Us', href: `/${lang}/about` },
+        { label: 'Contact', href: `/${lang}/contact` },
+        { label: 'Editorial Policy', href: `/${lang}/editorial-policy` },
+        { label: 'Careers', href: `/${lang}/careers` },
+      ]
+    },
+    {
+      title: 'Legal',
+      links: [
+        { label: 'Privacy Policy', href: `/${lang}/privacy` },
+        { label: 'Terms of Service', href: `/${lang}/terms` },
+        { label: 'Cookie Policy', href: `/${lang}/cookies` },
+        { label: 'Accessibility', href: `/${lang}/accessibility` },
+      ]
+    }
+  ]
+
+  const socialLinks = [
+    { icon: Facebook, href: 'https://facebook.com', label: 'Facebook' },
+    { icon: Twitter, href: 'https://twitter.com', label: 'Twitter' },
+    { icon: Instagram, href: 'https://instagram.com', label: 'Instagram' },
+    { icon: Youtube, href: 'https://youtube.com', label: 'Youtube' },
+    { icon: Linkedin, href: 'https://linkedin.com', label: 'LinkedIn' },
+    { icon: Mail, href: `/${lang}/contact`, label: 'Email' },
+  ]
 
   return (
-    <footer className="bg-gray-900 text-white mt-20">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Brand */}
-          <div>
-            <h3 className="text-2xl font-bold text-red-500">NRB Europe</h3>
-            <p className="mt-2 text-gray-400">
-              {dictionary.footer.description}
-            </p>
-          </div>
-
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{dictionary.footer.quickLinks}</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><Link href={`/${lang}/category/europe`} className="hover:text-white">Europe News</Link></li>
-              <li><Link href={`/${lang}/category/immigration`} className="hover:text-white">Immigration</Link></li>
-              <li><Link href={`/${lang}/category/jobs`} className="hover:text-white">Jobs</Link></li>
-              <li><Link href={`/${lang}/category/business`} className="hover:text-white">Business</Link></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{dictionary.footer.legal}</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li><Link href={`/${lang}/privacy`} className="hover:text-white">{dictionary.footer.privacyPolicy}</Link></li>
-              <li><Link href={`/${lang}/terms`} className="hover:text-white">{dictionary.footer.termsOfService}</Link></li>
-              <li><Link href={`/${lang}/about`} className="hover:text-white">{dictionary.footer.aboutUs}</Link></li>
-              <li><Link href={`/${lang}/contact`} className="hover:text-white">{dictionary.footer.contact}</Link></li>
-            </ul>
-          </div>
-
-          {/* Newsletter */}
-          <div>
-            <h4 className="text-lg font-semibold mb-4">{dictionary.footer.stayUpdated}</h4>
-            <p className="text-gray-400 mb-3">{dictionary.footer.newsletterDesc}</p>
-            <div className="flex">
-              <input
-                type="email"
-                placeholder={dictionary.footer.emailPlaceholder}
-                className="flex-1 px-3 py-2 rounded-l text-gray-900"
-              />
-              <button className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-r">
-                {dictionary.common.subscribe}
-              </button>
+    <footer className="bg-cnn-blue text-white mt-12">
+      <div className="cnn-container py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          {sections.map((section) => (
+            <div key={section.title}>
+              <h3 className="text-lg font-bold mb-4 uppercase tracking-wide">{section.title}</h3>
+              <ul className="space-y-2">
+                {section.links.map((link) => (
+                  <li key={link.label}>
+                    <Link 
+                      href={link.href}
+                      className="text-gray-300 hover:text-white text-sm transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500 text-sm">
-          <p>© {currentYear} NRB Europe. {dictionary.footer.rights}</p>
-          <p className="mt-1">{dictionary.footer.tagline}</p>
+        <div className="border-t border-gray-700 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-cnn-red rounded-full flex items-center justify-center">
+                <span className="text-white font-black text-lg">NRB</span>
+              </div>
+              <div>
+                <p className="text-sm text-gray-300">© {currentYear} NRB Europe</p>
+                <p className="text-xs text-gray-400">Your trusted source for European news</p>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              {socialLinks.map((social) => {
+                const Icon = social.icon
+                return (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-10 h-10 bg-gray-700 hover:bg-cnn-red rounded-full flex items-center justify-center transition-colors"
+                    aria-label={social.label}
+                  >
+                    <Icon className="w-5 h-5" />
+                  </a>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="mt-6 text-center text-xs text-gray-400">
+            <p>All Rights Reserved. Use of this site constitutes acceptance of our Terms of Service and Privacy Policy.</p>
+          </div>
         </div>
       </div>
     </footer>
-  );
-};
+  )
+}
 
-export default Footer;
+export default Footer

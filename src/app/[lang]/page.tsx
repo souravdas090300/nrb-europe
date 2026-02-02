@@ -1,169 +1,206 @@
-import ArticleCard from '@/components/ArticleCard'
-import BreakingNews from '@/components/BreakingNews'
 import { getDictionary } from '@/lib/get-dictionary'
 import { Locale } from '@/lib/i18n-config'
-import { client, urlFor } from '@/lib/sanity/client'
-import Image from 'next/image'
-import Link from 'next/link'
+import { client } from '@/lib/sanity/client'
+import HeroSection from '@/components/home/HeroSection'
+import LatestNews from '@/components/home/LatestNews'
+import CategorySection from '@/components/home/CategorySection'
+import Sidebar from '@/components/layout/Sidebar'
 
-// ISR: Revalidate every 60 seconds for fresh content without rebuilds
+// ISR: Revalidate every 60 seconds for fresh content
 export const revalidate = 60
 
 // GROQ Queries
-const topStoryQuery = `*[_type == "post" && isFeatured == true] | order(publishedAt desc)[0] {
+const heroArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[0..3] {
   _id,
   title,
   slug,
   excerpt,
   mainImage,
   publishedAt,
+  isLive,
+  body,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
   "author": author->name
 }`
 
-const latestArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[1..10] {
+const latestArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[4..9] {
   _id,
   title,
   slug,
   excerpt,
   mainImage,
   publishedAt,
-  isBreaking,
+  isLive,
+  body,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
   "author": author->name
 }`
 
-const breakingNewsQuery = `*[_type == "post" && isBreaking == true] | order(publishedAt desc)[0..4] {
+const categoryArticlesQuery = (categorySlug: string) => `*[_type == "post" && references(*[_type=="category" && slug.current=="${categorySlug}"]._id)] | order(publishedAt desc)[0..3] {
+  _id,
   title,
-  slug
+  slug,
+  excerpt,
+  mainImage,
+  publishedAt,
+  isLive,
+  "category": categories[0]->title,
+  "categorySlug": categories[0]->slug.current,
+  "author": author->name
+}`
+
+const trendingArticlesQuery = `*[_type == "post"] | order(views desc, publishedAt desc)[0..4] {
+  _id,
+  title,
+  slug,
+  mainImage,
+  publishedAt,
+  views
+}`
+
+const videoArticlesQuery = `*[_type == "post" && defined(videoUrl)] | order(publishedAt desc)[0..2] {
+  _id,
+  title,
+  slug,
+  mainImage,
+  publishedAt
 }`
 
 async function getHomeData() {
   try {
-    const [topStory, latestArticles, breakingNews] = await Promise.all([
-      client.fetch(topStoryQuery),
+    const [heroArticles, latestArticles, worldArticles, politicsArticles, businessArticles, trendingArticles, videoArticles] = await Promise.all([
+      client.fetch(heroArticlesQuery),
       client.fetch(latestArticlesQuery),
-      client.fetch(breakingNewsQuery),
+      client.fetch(categoryArticlesQuery('world')),
+      client.fetch(categoryArticlesQuery('politics')),
+      client.fetch(categoryArticlesQuery('business')),
+      client.fetch(trendingArticlesQuery),
+      client.fetch(videoArticlesQuery),
     ])
-    return { topStory, latestArticles, breakingNews }
+    
+    return {
+      heroArticles,
+      latestArticles,
+      worldArticles,
+      politicsArticles,
+      businessArticles,
+      trendingArticles,
+      videoArticles
+    }
   } catch (error) {
     console.error('Error fetching home data:', error)
-    return { topStory: null, latestArticles: [], breakingNews: [] }
+    return {
+      heroArticles: [],
+      latestArticles: [],
+      worldArticles: [],
+      politicsArticles: [],
+      businessArticles: [],
+      trendingArticles: [],
+      videoArticles: []
+    }
   }
 }
 
 export default async function Home({
-  params: { lang },
+  params,
 }: {
-  params: { lang: Locale }
+  params: Promise<{ lang: Locale }>
 }) {
+  const { lang } = await params
   const dictionary = await getDictionary(lang)
-  const { topStory, latestArticles, breakingNews } = await getHomeData()
+  const {
+    heroArticles,
+    latestArticles,
+    worldArticles,
+    politicsArticles,
+    businessArticles,
+    trendingArticles,
+    videoArticles
+  } = await getHomeData()
+
+  const [mainArticle, ...sideArticles] = heroArticles
 
   return (
-    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Breaking News Ticker */}
-      {breakingNews.length > 0 && (
-        <BreakingNews items={breakingNews} lang={lang} />
-      )}
+    <main className="bg-white">
+      <div className="cnn-container py-6">
+        {/* Hero Section */}
+        {mainArticle && (
+          <HeroSection
+            lang={lang}
+            mainArticle={mainArticle}
+            sideArticles={sideArticles}
+          />
+        )}
 
-      {/* Hero / Top Story Section */}
-      {topStory && (
-        <section className="mt-6 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Main Hero Story */}
-            <Link href={`/${lang}/news/${topStory.slug.current}`} className="block group">
-              <div className="relative h-96 rounded-lg overflow-hidden">
-                {topStory.mainImage && (
-                  <Image
-                    src={urlFor(topStory.mainImage).width(800).height(600).url()}
-                    alt={topStory.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    priority
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  {topStory.category && (
-                    <span className="inline-block bg-red-600 px-3 py-1 text-xs font-bold uppercase mb-3 rounded">
-                      {topStory.category}
-                    </span>
-                  )}
-                  <h2 className="text-3xl md:text-4xl font-bold mb-2 line-clamp-3">
-                    {topStory.title}
-                  </h2>
-                  {topStory.excerpt && (
-                    <p className="text-gray-200 line-clamp-2">{topStory.excerpt}</p>
-                  )}
-                </div>
-              </div>
-            </Link>
+        {/* Main Content Grid: Content + Sidebar */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          {/* Main Content - 2/3 width */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Latest News */}
+            {latestArticles.length > 0 && (
+              <LatestNews lang={lang} articles={latestArticles} />
+            )}
 
-            {/* Side Stories */}
-            <div className="flex flex-col gap-4">
-              {latestArticles.slice(0, 3).map((article: any) => (
-                <Link
-                  key={article._id}
-                  href={`/${lang}/news/${article.slug.current}`}
-                  className="flex gap-4 bg-white rounded-lg overflow-hidden hover:shadow-lg transition group"
-                >
-                  {article.mainImage && (
-                    <div className="relative w-32 h-32 flex-shrink-0">
-                      <Image
-                        src={urlFor(article.mainImage).width(200).height(200).url()}
-                        alt={article.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  )}
-                  <div className="flex-1 p-4">
-                    {article.category && (
-                      <span className="text-xs text-red-600 font-semibold uppercase">
-                        {article.category}
-                      </span>
-                    )}
-                    <h3 className="font-bold text-lg mb-1 line-clamp-2 group-hover:text-red-600 transition">
-                      {article.title}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      {new Date(article.publishedAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            {/* World News Section */}
+            {worldArticles.length > 0 && (
+              <CategorySection
+                lang={lang}
+                categoryName="World"
+                categorySlug="world"
+                articles={worldArticles}
+              />
+            )}
+
+            {/* Politics Section */}
+            {politicsArticles.length > 0 && (
+              <CategorySection
+                lang={lang}
+                categoryName="Politics"
+                categorySlug="politics"
+                articles={politicsArticles}
+              />
+            )}
+
+            {/* Business Section */}
+            {businessArticles.length > 0 && (
+              <CategorySection
+                lang={lang}
+                categoryName="Business"
+                categorySlug="business"
+                articles={businessArticles}
+              />
+            )}
           </div>
-        </section>
-      )}
 
-      {/* Section Header */}
-      <div className="border-b-4 border-red-600 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 pb-2">Latest News</h2>
-      </div>
-
-      {/* Latest Articles Grid */}
-      {latestArticles.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 text-lg mb-4">No articles published yet.</p>
-          <p className="text-gray-500">
-            Visit <a href="/studio" className="text-blue-600 hover:underline">/studio</a> to create your first article.
-          </p>
-        </div>
-      ) : (
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {latestArticles.map((article: any) => (
-            <ArticleCard
-              key={article._id}
-              article={article}
+          {/* Sidebar - 1/3 width */}
+          <div>
+            <Sidebar
               lang={lang}
+              trendingArticles={trendingArticles}
+              mostReadArticles={latestArticles.slice(0, 5)}
+              videoArticles={videoArticles}
             />
-          ))}
-        </section>
-      )}
+          </div>
+        </div>
+
+        {/* Empty State */}
+        {heroArticles.length === 0 && latestArticles.length === 0 && (
+          <div className="text-center py-20">
+            <h2 className="headline-2xl text-cnn-text mb-4">No articles published yet</h2>
+            <p className="text-cnn-gray mb-6">
+              Visit the Sanity Studio to create your first article
+            </p>
+            <a
+              href="/studio"
+              className="cnn-button-primary inline-block"
+            >
+              Go to Studio
+            </a>
+          </div>
+        )}
+      </div>
     </main>
   )
 }

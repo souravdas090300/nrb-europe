@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { PortableText } from '@portabletext/react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Metadata } from 'next'
 
 // Define the Portable Text components for rendering
 const portableTextComponents = {
@@ -75,7 +76,7 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: { params: { slug: string } }) {
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const article = await client.fetch(articleBySlugQuery, { slug: params.slug })
   
   if (!article) {
@@ -258,7 +259,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
           <p className="text-gray-700 mb-4">Share this article:</p>
           <div className="flex gap-4">
             <a
-              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(`https://nrbeurope.com/article/${article.slug.current}`)}`}
+              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(`https://nrbeurope.com/en/news/${article.slug.current}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
@@ -266,7 +267,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               Twitter
             </a>
             <a
-              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://nrbeurope.com/article/${article.slug.current}`)}`}
+              href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`https://nrbeurope.com/en/news/${article.slug.current}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 transition"
@@ -274,7 +275,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               Facebook
             </a>
             <a
-              href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`https://nrbeurope.com/article/${article.slug.current}`)}&title=${encodeURIComponent(article.title)}`}
+              href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(`https://nrbeurope.com/en/news/${article.slug.current}`)}&title=${encodeURIComponent(article.title)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900 transition"
@@ -292,7 +293,7 @@ export default async function ArticlePage({ params }: { params: { slug: string }
               {relatedArticles.slice(0, 4).map((related: any) => (
                 <Link
                   key={related._id}
-                  href={`/article/${related.slug.current}`}
+                  href={`/en/news/${related.slug.current}`}
                   className="block border rounded-lg p-4 hover:shadow-lg transition"
                 >
                   <h3 className="font-bold text-lg mb-2">{related.title}</h3>

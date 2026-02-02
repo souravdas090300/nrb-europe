@@ -95,7 +95,7 @@ export default function SearchBar({
               {results.slice(0, 8).map((article) => (
                 <a
                   key={article._id}
-                  href={`/${lang}/article/${article.slug.current}`}
+                  href={`/${lang}/news/${article.slug.current}`}
                   className="block p-4 hover:bg-gray-50 border-b last:border-b-0"
                   onClick={() => setShowResults(false)}
                 >

@@ -3,7 +3,6 @@ import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import BreakingNewsTicker from '@/components/BreakingNewsTicker'
 import GoogleAnalytics from '@/components/GoogleAnalytics'
 import PWAInstallPrompt from '@/components/PWAInstallPrompt'
 import OrganizationStructuredData from '@/components/seo/OrganizationStructuredData'
@@ -72,6 +71,10 @@ export const metadata: Metadata = {
   },
 }
 
+import BreakingNewsBar from '@/components/layout/BreakingNewsBar'
+import LiveIndicator from '@/components/ui/LiveIndicator'
+import { getDictionary } from '@/lib/get-dictionary'
+
 export default async function RootLayout({
   children,
   params,
@@ -80,6 +83,7 @@ export default async function RootLayout({
   params: Promise<{ lang: string }>
 }) {
   const { lang } = await params as { lang: Locale }
+  const dictionary = await getDictionary(lang)
   
   return (
     <html lang={lang}>
@@ -91,10 +95,11 @@ export default async function RootLayout({
         <meta name="original-source" content="NRB Europe" />
         <OrganizationStructuredData />
       </head>
-      <body className={`${inter.className} bg-gray-50 text-gray-900`}>
+      <body className={`${inter.className} bg-white text-cnn-text`}>
         <GoogleAnalytics />
-        <BreakingNewsTicker />
-        <Header lang={lang} />
+        <BreakingNewsBar />
+        <LiveIndicator />
+        <Header lang={lang} dictionary={dictionary} />
         <div className="min-h-screen">{children}</div>
         <Footer lang={lang} />
         <PWAInstallPrompt />
