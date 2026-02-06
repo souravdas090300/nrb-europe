@@ -3,15 +3,7 @@ import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import type { Metadata } from 'next'
 
-// AMP component type declarations
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'amp-img': any
-      'amp-analytics': any
-    }
-  }
-}
+// AMP component type declarations are in root amp.d.ts
 
 export const revalidate = 60
 
@@ -95,13 +87,9 @@ export default async function AMPArticlePage({ params }: PageProps) {
           </div>
           
           {imageUrl && (
-            <amp-img
-              src={imageUrl}
-              width="1200"
-              height="630"
-              layout="responsive"
-              alt={article.title}
-            />
+            <div dangerouslySetInnerHTML={{
+              __html: `<amp-img src="${imageUrl}" width="1200" height="630" layout="responsive" alt="${article.title}"></amp-img>`
+            }} />
           )}
           
           <div className="content">
@@ -109,21 +97,19 @@ export default async function AMPArticlePage({ params }: PageProps) {
           </div>
         </article>
         
-        <amp-analytics type="googleanalytics">
-          <script type="application/json" dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              vars: {
-                account: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+        <div dangerouslySetInnerHTML={{
+          __html: `<amp-analytics type="googleanalytics"><script type="application/json">${JSON.stringify({
+            vars: {
+              account: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+            },
+            triggers: {
+              trackPageview: {
+                on: 'visible',
+                request: 'pageview',
               },
-              triggers: {
-                trackPageview: {
-                  on: 'visible',
-                  request: 'pageview',
-                },
-              },
-            })
-          }} />
-        </amp-analytics>
+            },
+          })}</script></amp-analytics>`
+        }} />
       </body>
     </html>
   )
