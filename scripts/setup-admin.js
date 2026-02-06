@@ -1,7 +1,22 @@
 #!/usr/bin/env node
 
 const { createClient } = require('@sanity/client');
-require('dotenv').config({ path: '.env.local' });
+// Don't load dotenv here - it's already loaded by run-setup.js
+
+// Validate environment before creating client
+if (!process.env.NEXT_PUBLIC_SANITY_PROJECT_ID) {
+  console.error('❌ NEXT_PUBLIC_SANITY_PROJECT_ID is not set');
+  process.exit(1);
+}
+
+if (!process.env.SANITY_API_TOKEN) {
+  console.error('❌ SANITY_API_TOKEN is not set');
+  console.log('\n💡 Alternative: Use Sanity Studio browser authentication');
+  console.log('   1. Run: npm run dev');
+  console.log('   2. Visit: http://localhost:3000/studio');
+  console.log('   3. Create documents directly in the Studio UI');
+  process.exit(1);
+}
 
 const client = createClient({
   projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID,
@@ -9,6 +24,8 @@ const client = createClient({
   token: process.env.SANITY_API_TOKEN,
   apiVersion: '2026-01-29',
   useCdn: false,
+  // Add authentication headers
+  requestTagPrefix: 'setup-admin',
 });
 
 async function setupAdminSystem() {

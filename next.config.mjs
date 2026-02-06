@@ -1,3 +1,9 @@
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.dev file directly
+config({ path: resolve(process.cwd(), '.env.dev') });
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
