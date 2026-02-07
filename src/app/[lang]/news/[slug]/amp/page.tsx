@@ -55,17 +55,26 @@ export default async function AMPArticlePage({ params }: PageProps) {
         <script async src="https://cdn.ampproject.org/v0.js"></script>
         <script async custom-element="amp-analytics" src="https://cdn.ampproject.org/v0/amp-analytics-0.1.js"></script>
         
-        <style amp-boilerplate="" dangerouslySetInnerHTML={{__html: `body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}`}} />
+        <style 
+          {...({'amp-boilerplate': ''} as any)} 
+          dangerouslySetInnerHTML={{__html: `body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}`}} 
+        />
         <noscript>
-          <style amp-boilerplate="" dangerouslySetInnerHTML={{__html: `body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}`}} />
+          <style 
+            {...({'amp-boilerplate': ''} as any)} 
+            dangerouslySetInnerHTML={{__html: `body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}`}} 
+          />
         </noscript>
         
-        <style amp-custom="" dangerouslySetInnerHTML={{__html: `
+        <style 
+          {...({'amp-custom': ''} as any)} 
+          dangerouslySetInnerHTML={{__html: `
           body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
           h1 { font-size: 2rem; margin-bottom: 1rem; }
           .meta { color: #666; margin-bottom: 1rem; }
           .content { line-height: 1.6; }
-        `}} />
+        `}} 
+        />
       </head>
       
       <body>
