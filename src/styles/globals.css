@@ -21,20 +21,27 @@
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     color: var(--cnn-text);
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-white text-cnn-text;
+    @apply bg-white text-cnn-text antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', sans-serif;
     font-weight: 700;
+    @apply tracking-tight;
   }
 
   .font-headline {
     font-family: 'Inter', sans-serif;
     font-weight: 800;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-red-600 text-white;
   }
 }
 
@@ -262,4 +269,42 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cnn-red-dark);
+}
+
+/* Focus styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply transition-transform duration-300 hover:-translate-y-1;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200;
+}
+
+/* News badge */
+.badge-news {
+  @apply bg-red-600 text-white text-xs font-bold px-3 py-1 rounded;
+}
+
+/* Category badge */
+.badge-category {
+  @apply bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1 rounded;
+}
+
+/* Gradient overlays */
+.gradient-overlay {
+  @apply absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent;
+}
+
+/* Line clamp utilities for truncating text */
+.line-clamp-4 {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

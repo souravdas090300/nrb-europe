@@ -1,10 +1,12 @@
 import { getDictionary } from '@/lib/get-dictionary'
 import { Locale } from '@/lib/i18n-config'
 import { client } from '@/lib/sanity/client'
-import HeroSection from '@/components/home/HeroSection'
-import LatestNews from '@/components/home/LatestNews'
-import CategorySection from '@/components/home/CategorySection'
-import Sidebar from '@/components/layout/Sidebar'
+import HeroSection from '@/components/HeroSection'
+import CategoryGrid from '@/components/CategoryGrid'
+import TrendingStories from '@/components/TrendingStories'
+import VideoSection from '@/components/VideoSection'
+import LatestStories from '@/components/LatestStories'
+import Newsletter from '@/components/Newsletter'
 
 // ISR: Revalidate every 60 seconds for fresh content
 export const revalidate = 60
@@ -123,84 +125,45 @@ export default async function Home({
   const [mainArticle, ...sideArticles] = heroArticles
 
   return (
-    <main className="bg-white">
-      <div className="cnn-container py-6">
-        {/* Hero Section */}
-        {mainArticle && (
-          <HeroSection
-            lang={lang}
-            mainArticle={mainArticle}
-            sideArticles={sideArticles}
-          />
-        )}
-
-        {/* Main Content Grid: Content + Sidebar */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          {/* Main Content - 2/3 width */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Latest News */}
-            {latestArticles.length > 0 && (
-              <LatestNews lang={lang} articles={latestArticles} />
-            )}
-
-            {/* World News Section */}
-            {worldArticles.length > 0 && (
-              <CategorySection
-                lang={lang}
-                categoryName="World"
-                categorySlug="world"
-                articles={worldArticles}
-              />
-            )}
-
-            {/* Politics Section */}
-            {politicsArticles.length > 0 && (
-              <CategorySection
-                lang={lang}
-                categoryName="Politics"
-                categorySlug="politics"
-                articles={politicsArticles}
-              />
-            )}
-
-            {/* Business Section */}
-            {businessArticles.length > 0 && (
-              <CategorySection
-                lang={lang}
-                categoryName="Business"
-                categorySlug="business"
-                articles={businessArticles}
-              />
-            )}
-          </div>
-
-          {/* Sidebar - 1/3 width */}
-          <div>
-            <Sidebar
-              lang={lang}
-              trendingArticles={trendingArticles}
-              mostReadArticles={latestArticles.slice(0, 5)}
-              videoArticles={videoArticles}
-            />
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {heroArticles.length === 0 && latestArticles.length === 0 && (
-          <div className="text-center py-20">
-            <h2 className="headline-2xl text-cnn-text mb-4">No articles published yet</h2>
-            <p className="text-cnn-gray mb-6">
-              Visit the Sanity Studio to create your first article
-            </p>
-            <a
-              href="/studio"
-              className="cnn-button-primary inline-block"
-            >
-              Go to Studio
-            </a>
-          </div>
-        )}
+    <main className="min-h-screen bg-white">
+      {/* CNN-Style Hero Section */}
+      <HeroSection />
+      
+      {/* Category Grid */}
+      <CategoryGrid />
+      
+      {/* Latest Stories Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-red-600 pl-4">
+          Latest Stories
+        </h2>
+        <LatestStories />
       </div>
+      
+      {/* Trending Stories */}
+      <TrendingStories />
+      
+      {/* Video Section */}
+      <VideoSection />
+      
+      {/* Newsletter */}
+      <Newsletter />
+
+      {/* Empty State - Show if no articles */}
+      {heroArticles.length === 0 && (
+        <div className="text-center py-20 max-w-7xl mx-auto px-4">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">No articles published yet</h2>
+          <p className="text-gray-600 mb-6 text-lg">
+            Visit the Sanity Studio to create your first article
+          </p>
+          <a
+            href="/studio"
+            className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-lg inline-block transition"
+          >
+            Go to Studio
+          </a>
+        </div>
+      )}
     </main>
   )
 }

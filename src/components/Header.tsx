@@ -8,6 +8,7 @@ import { Menu, Search, X, ChevronDown } from 'lucide-react'
 import NavBar from './NavBar'
 import LanguageSwitcher from './LanguageSwitcher'
 import SearchBar from './SearchBar'
+import BreakingNewsTicker from './BreakingNewsTicker'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import { navItems } from '@/lib/constants'
@@ -28,6 +29,9 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
 
   return (
     <>
+      {/* Breaking News Ticker */}
+      <BreakingNewsTicker />
+      
       {/* Top Bar */}
       <div className="bg-cnn-blue text-white py-2">
         <div className="cnn-container flex justify-between items-center text-sm">
