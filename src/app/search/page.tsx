@@ -4,11 +4,12 @@ import { Metadata } from 'next'
 import { Search } from 'lucide-react'
 
 interface SearchPageProps {
-  searchParams: { q?: string }
+  searchParams: Promise<{ q?: string }>
 }
 
 export async function generateMetadata({ searchParams }: SearchPageProps): Promise<Metadata> {
-  const query = searchParams.q || ''
+  const { q } = await searchParams
+  const query = q || ''
   return {
     title: query ? `Search Results for "${query}" - NRB Europe` : 'Search - NRB Europe',
     description: 'Search news articles on NRB Europe'
@@ -16,7 +17,8 @@ export async function generateMetadata({ searchParams }: SearchPageProps): Promi
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams.q || ''
+  const { q } = await searchParams
+  const query = q || ''
   
   let articles = []
   if (query.length >= 2) {

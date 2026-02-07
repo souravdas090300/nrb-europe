@@ -76,8 +76,9 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for SEO
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const article = await client.fetch(articleBySlugQuery, { slug: params.slug })
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const article = await client.fetch(articleBySlugQuery, { slug })
   
   if (!article) {
     return {
@@ -118,8 +119,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 // Add revalidation for ISR (Incremental Static Regeneration)
 export const revalidate = 60 // Revalidate every 60 seconds for breaking news
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const article = await client.fetch(articleBySlugQuery, { slug: params.slug })
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const article = await client.fetch(articleBySlugQuery, { slug })
   
   if (!article) {
     notFound()

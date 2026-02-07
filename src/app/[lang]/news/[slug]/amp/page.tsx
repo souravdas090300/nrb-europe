@@ -8,13 +8,14 @@ import type { Metadata } from 'next'
 export const revalidate = 60
 
 interface PageProps {
-  params: { lang: string; slug: string }
+  params: Promise<{ lang: string; slug: string }>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
   const article = await client.fetch(
     `*[_type == "post" && slug.current == $slug][0] { title, excerpt }`,
-    { slug: params.slug }
+    { slug }
   )
   
   return {
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function AMPArticlePage({ params }: PageProps) {
+  const { lang, slug } = await params
   const article = await client.fetch(
     `*[_type == "post" && slug.current == $slug][0] {
       _id,
@@ -35,16 +37,16 @@ export default async function AMPArticlePage({ params }: PageProps) {
       "author": author->name,
       "category": categories[0]->title
     }`,
-    { slug: params.slug }
+    { slug }
   )
   
   if (!article) notFound()
 
   const imageUrl = article.mainImage ? urlFor(article.mainImage).width(1200).url() : ''
-  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${params.lang}/news/${article.slug}`
+  const canonicalUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/${lang}/news/${article.slug}`
 
   return (
-    <html lang={params.lang} {...({ amp: '' } as any)}>
+    <html lang={lang} {...({ amp: '' } as any)}>
       <head>
         <meta charSet="utf-8" />
         <title>{article.title} - NRB Europe</title>

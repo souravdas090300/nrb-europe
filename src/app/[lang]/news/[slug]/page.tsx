@@ -10,18 +10,19 @@ export const revalidate = 60 // Auto-update every 60 seconds
 export const dynamic = 'force-static' // Force static generation for speed
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string
     lang: Locale
-  }
+  }>
 }
 
 // Generate SEO metadata at build time
 export async function generateMetadata(
   { params }: PageProps
 ): Promise<Metadata> {
+  const { slug } = await params
   const article = await client.fetch(articleBySlugQuery, {
-    slug: params.slug,
+    slug,
   })
 
   if (!article) {
@@ -54,8 +55,9 @@ export async function generateMetadata(
 }
 
 export default async function ArticlePage({ params }: PageProps) {
+  const { slug } = await params
   const article = await client.fetch(articleBySlugQuery, {
-    slug: params.slug,
+    slug,
   })
 
   if (!article) return notFound()

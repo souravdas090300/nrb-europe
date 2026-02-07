@@ -14,8 +14,9 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const category = await client.fetch(categoryBySlugQuery, { slug: params.slug })
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const category = await client.fetch(categoryBySlugQuery, { slug })
   
   if (!category) {
     return {
@@ -31,8 +32,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export const revalidate = 60 // Revalidate every minute
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
-  const category = await client.fetch(categoryBySlugQuery, { slug: params.slug })
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const category = await client.fetch(categoryBySlugQuery, { slug })
   
   if (!category) {
     notFound()
@@ -53,7 +55,7 @@ export default async function CategoryPage({ params }: { params: { slug: string 
       "categorySlug": categories[0]->slug.current,
       "author": author->name
     }`,
-    { slug: params.slug }
+    { slug }
   )
 
   return (
