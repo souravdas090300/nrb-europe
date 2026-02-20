@@ -95,7 +95,7 @@ export default async function RootLayout({
         <meta name="original-source" content="NRB Europe" />
         <OrganizationStructuredData />
       </head>
-      <body className={`${inter.className} bg-white text-cnn-text`}>
+      <body className={`${inter.className} bg-white text-nrb-text`}>
         <GoogleAnalytics />
         <BreakingNewsBar />
         <LiveIndicator />

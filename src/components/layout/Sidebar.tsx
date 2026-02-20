@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import Link from 'next/link'
@@ -57,9 +57,9 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
     <aside className="space-y-8">
       {/* Trending Section */}
       {trendingArticles.length > 0 && (
-        <div className="cnn-card">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cnn-gray-light">
-            <TrendingUp className="w-5 h-5 text-cnn-red" />
+        <div className="nrb-card">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-nrb-gray-light">
+            <TrendingUp className="w-5 h-5 text-nrb-red" />
             <h3 className="headline-lg">Trending Now</h3>
           </div>
           <div className="space-y-4">
@@ -69,14 +69,14 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
                 href={`/${lang}/news/${article.slug.current}`}
                 className="flex gap-3 group"
               >
-                <span className="text-3xl font-black text-cnn-red flex-shrink-0 w-8">
+                <span className="text-3xl font-black text-nrb-red flex-shrink-0 w-8">
                   {index + 1}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-cnn-text line-clamp-3 group-hover:text-cnn-red transition-colors">
+                  <h4 className="text-sm font-bold text-nrb-text line-clamp-3 group-hover:text-nrb-red transition-colors">
                     {article.title}
                   </h4>
-                  <p className="text-xs text-cnn-gray mt-1">
+                  <p className="text-xs text-nrb-gray mt-1">
                     {formatDate(article.publishedAt)}
                   </p>
                 </div>
@@ -88,9 +88,9 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
 
       {/* Most Read Section */}
       {mostReadArticles.length > 0 && (
-        <div className="cnn-card">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cnn-gray-light">
-            <Eye className="w-5 h-5 text-cnn-red" />
+        <div className="nrb-card">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-nrb-gray-light">
+            <Eye className="w-5 h-5 text-nrb-red" />
             <h3 className="headline-lg">Most Read</h3>
           </div>
           <div className="space-y-4">
@@ -100,12 +100,12 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
                 href={`/${lang}/news/${article.slug.current}`}
                 className="group block"
               >
-                <h4 className="text-sm font-bold text-cnn-text line-clamp-2 group-hover:text-cnn-red transition-colors">
+                <h4 className="text-sm font-bold text-nrb-text line-clamp-2 group-hover:text-nrb-red transition-colors">
                   {article.title}
                 </h4>
-                <p className="text-xs text-cnn-gray mt-1">
+                <p className="text-xs text-nrb-gray mt-1">
                   {formatDate(article.publishedAt)}
-                  {article.views && ` • ${article.views.toLocaleString()} views`}
+                  {article.views && ` â€¢ ${article.views.toLocaleString()} views`}
                 </p>
               </Link>
             ))}
@@ -115,9 +115,9 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
 
       {/* Video Section */}
       {videoArticles.length > 0 && (
-        <div className="cnn-card">
-          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-cnn-gray-light">
-            <Play className="w-5 h-5 text-cnn-red" />
+        <div className="nrb-card">
+          <div className="flex items-center gap-2 mb-4 pb-3 border-b border-nrb-gray-light">
+            <Play className="w-5 h-5 text-nrb-red" />
             <h3 className="headline-lg">Must-Watch Videos</h3>
           </div>
           <div className="space-y-4">
@@ -127,7 +127,7 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
                 href={`/${lang}/news/${article.slug.current}`}
                 className="group block"
               >
-                <div className="relative h-40 bg-cnn-gray-light overflow-hidden mb-2">
+                <div className="relative h-40 bg-nrb-gray-light overflow-hidden mb-2">
                   {article.mainImage && (
                     <Image
                       src={urlFor(article.mainImage).width(400).height(300).url()}
@@ -138,11 +138,11 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
                   )}
                   <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                     <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-                      <Play className="w-6 h-6 text-cnn-red ml-1" />
+                      <Play className="w-6 h-6 text-nrb-red ml-1" />
                     </div>
                   </div>
                 </div>
-                <h4 className="text-sm font-bold text-cnn-text line-clamp-2 group-hover:text-cnn-red transition-colors">
+                <h4 className="text-sm font-bold text-nrb-text line-clamp-2 group-hover:text-nrb-red transition-colors">
                   {article.title}
                 </h4>
               </Link>
@@ -152,7 +152,7 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
       )}
 
       {/* Newsletter Section */}
-      <div className="cnn-card bg-cnn-blue text-white">
+      <div className="nrb-card bg-nrb-blue text-white">
         <div className="flex items-center gap-2 mb-4">
           <Mail className="w-5 h-5" />
           <h3 className="headline-lg">Stay Informed</h3>
@@ -166,13 +166,13 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
-            className="w-full px-4 py-2 rounded bg-white text-cnn-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cnn-red"
+            className="w-full px-4 py-2 rounded bg-white text-nrb-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-nrb-red"
             required
             disabled={isSubmitting}
           />
           <button
             type="submit"
-            className="w-full cnn-button-primary"
+            className="w-full nrb-button-primary"
             disabled={isSubmitting}
           >
             {isSubmitting ? 'Subscribing...' : 'Subscribe'}
@@ -186,7 +186,7 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
       </div>
 
       {/* Follow Us Section */}
-      <div className="cnn-card">
+      <div className="nrb-card">
         <h3 className="headline-lg mb-4">Follow Us</h3>
         <div className="grid grid-cols-3 gap-3">
           {[
@@ -212,3 +212,4 @@ const Sidebar = ({ lang, trendingArticles = [], mostReadArticles = [], videoArti
 }
 
 export default Sidebar
+

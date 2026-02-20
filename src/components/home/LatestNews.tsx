@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import NewsCard from '@/components/ui/NewsCard'
 
 interface Article {
@@ -22,18 +22,18 @@ interface LatestNewsProps {
 
 const LatestNews = ({ lang, articles }: LatestNewsProps) => {
   return (
-    <section className="cnn-section">
+    <section className="nrb-section">
       <div className="flex items-center justify-between mb-6">
         <h2 className="headline-2xl">Latest News</h2>
         <a 
           href={`/${lang}/category/all`}
-          className="text-sm font-semibold text-cnn-red hover:underline uppercase tracking-wide"
+          className="text-sm font-semibold text-nrb-red hover:underline uppercase tracking-wide"
         >
-          View All →
+          View All â†’
         </a>
       </div>
 
-      <div className="cnn-grid-3 gap-6">
+      <div className="nrb-grid-3 gap-6">
         {articles.map((article) => (
           <NewsCard 
             key={article._id}
@@ -48,3 +48,4 @@ const LatestNews = ({ lang, articles }: LatestNewsProps) => {
 }
 
 export default LatestNews
+

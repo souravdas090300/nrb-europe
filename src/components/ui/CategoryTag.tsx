@@ -10,7 +10,7 @@ export default function CategoryTag({ category, slug, lang = 'en' }: CategoryTag
   return (
     <Link
       href={`/${lang}/category/${slug}`}
-      className="cnn-badge-category hover:bg-cnn-red hover:text-white transition-colors"
+      className="nrb-badge-category hover:bg-nrb-red hover:text-white transition-colors"
     >
       {category}
     </Link>

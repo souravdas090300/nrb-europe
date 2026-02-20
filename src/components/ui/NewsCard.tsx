@@ -1,4 +1,4 @@
-import Image from 'next/image'
+﻿import Image from 'next/image'
 import Link from 'next/link'
 import { Clock, User } from 'lucide-react'
 import { urlFor } from '@/lib/sanity/client'
@@ -55,11 +55,11 @@ export default function NewsCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm group-hover:text-cnn-red transition-colors line-clamp-2">
+          <h3 className="font-semibold text-sm group-hover:text-nrb-red transition-colors line-clamp-2">
             {article.title}
           </h3>
           {showMeta && (
-            <div className="flex items-center space-x-2 text-xs text-cnn-gray mt-1">
+            <div className="flex items-center space-x-2 text-xs text-nrb-gray mt-1">
               <time>{formatDate(article.publishedAt)}</time>
             </div>
           )}
@@ -71,7 +71,7 @@ export default function NewsCard({
   return (
     <Link
       href={`/${lang}/news/${article.slug.current}`}
-      className="cnn-card cnn-card-hover block group"
+      className="nrb-card nrb-card-hover block group"
     >
       {/* Image */}
       <div className="relative aspect-video overflow-hidden">
@@ -84,8 +84,8 @@ export default function NewsCard({
             sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
-          <div className="absolute inset-0 bg-cnn-gray-light flex items-center justify-center">
-            <span className="text-cnn-gray font-bold text-2xl">NRB</span>
+          <div className="absolute inset-0 bg-nrb-gray-light flex items-center justify-center">
+            <span className="text-nrb-gray font-bold text-2xl">NRB</span>
           </div>
         )}
         
@@ -104,18 +104,18 @@ export default function NewsCard({
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="headline-md mb-2 group-hover:text-cnn-red transition-colors line-clamp-2">
+        <h3 className="headline-md mb-2 group-hover:text-nrb-red transition-colors line-clamp-2">
           {article.title}
         </h3>
         
         {showExcerpt && article.excerpt && (
-          <p className="text-cnn-gray mb-3 line-clamp-2">
+          <p className="text-nrb-gray mb-3 line-clamp-2">
             {article.excerpt}
           </p>
         )}
 
         {showMeta && (
-          <div className="flex items-center justify-between text-sm text-cnn-gray">
+          <div className="flex items-center justify-between text-sm text-nrb-gray">
             <div className="flex items-center space-x-3">
               {article.author && (
                 <span className="flex items-center">
@@ -135,3 +135,4 @@ export default function NewsCard({
     </Link>
   )
 }
+

@@ -21,8 +21,8 @@ export default function BreakingNewsBar() {
   }, [])
 
   return (
-    <div className="bg-cnn-live text-white py-2 overflow-hidden">
-      <div className="cnn-container flex items-center">
+    <div className="bg-nrb-live text-white py-2 overflow-hidden">
+      <div className="nrb-container flex items-center">
         <div className="flex items-center mr-4 flex-shrink-0">
           <AlertTriangle className="w-4 h-4 mr-2 animate-pulse" />
           <span className="font-bold text-sm uppercase tracking-wider">BREAKING</span>

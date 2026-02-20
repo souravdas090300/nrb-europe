@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import React from 'react'
@@ -33,15 +33,15 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
       <BreakingNewsTicker />
       
       {/* Top Bar */}
-      <div className="bg-cnn-blue text-white py-2">
-        <div className="cnn-container flex justify-between items-center text-sm">
+      <div className="bg-nrb-blue text-white py-2">
+        <div className="nrb-container flex justify-between items-center text-sm">
           <div className="flex items-center space-x-6">
             <Link href={`/${lang}`} className="font-semibold hover:text-gray-300">
               LIVE TV
             </Link>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline">â€¢</span>
             <span className="hidden md:inline">EUROPE EDITION</span>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline">â€¢</span>
             <time className="hidden md:inline">
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
@@ -64,20 +64,20 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
         'sticky top-0 z-40 bg-white transition-all duration-300 border-b',
         isScrolled && 'shadow-lg'
       )}>
-        <div className="cnn-container">
+        <div className="nrb-container">
           <div className="flex items-center justify-between py-4">
             {/* Logo */}
             <Link href={`/${lang}`} className="flex items-center space-x-3">
               <div className="relative w-12 h-12">
-                <div className="absolute inset-0 bg-cnn-red rounded-full" />
+                <div className="absolute inset-0 bg-nrb-red rounded-full" />
                 <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-lg">
                   NRB
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-cnn-red">NRB EUROPE</h1>
-                <p className="text-xs text-cnn-text-light uppercase tracking-wider hidden sm:block">
-                  Breaking News • Independent Reporting
+                <h1 className="text-2xl font-bold text-nrb-red">NRB EUROPE</h1>
+                <p className="text-xs text-nrb-text-light uppercase tracking-wider hidden sm:block">
+                  Breaking News â€¢ Independent Reporting
                 </p>
               </div>
             </Link>
@@ -88,13 +88,13 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
                 <Link
                   key={item.href}
                   href={`/${lang}${item.href}`}
-                  className="cnn-nav-link text-sm font-semibold uppercase tracking-wide"
+                  className="nrb-nav-link text-sm font-semibold uppercase tracking-wide"
                 >
                   {item.label}
                 </Link>
               ))}
               <div className="relative group">
-                <button className="cnn-nav-link text-sm font-semibold uppercase tracking-wide flex items-center">
+                <button className="nrb-nav-link text-sm font-semibold uppercase tracking-wide flex items-center">
                   More <ChevronDown className="ml-1 w-4 h-4" />
                 </button>
                 <div className="absolute hidden group-hover:block bg-white shadow-lg min-w-[200px] mt-2 border">
@@ -102,7 +102,7 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
                     <Link
                       key={item.href}
                       href={`/${lang}${item.href}`}
-                      className="block px-4 py-2 hover:bg-cnn-gray-light text-sm font-semibold"
+                      className="block px-4 py-2 hover:bg-nrb-gray-light text-sm font-semibold"
                     >
                       {item.label}
                     </Link>
@@ -114,7 +114,7 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
             {/* Right Section */}
             <div className="flex items-center space-x-4">
               <button 
-                className="p-2 hover:bg-cnn-gray-light rounded-full"
+                className="p-2 hover:bg-nrb-gray-light rounded-full"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
               >
                 <Search className="w-5 h-5" />
@@ -122,7 +122,7 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
               <div className="hidden md:block">
                 <LanguageSwitcher />
               </div>
-              <button className="cnn-button-primary hidden md:inline-flex text-sm">
+              <button className="nrb-button-primary hidden md:inline-flex text-sm">
                 Subscribe
               </button>
               <button
@@ -153,7 +153,7 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
                   <Link
                     key={item.href}
                     href={`/${lang}${item.href}`}
-                    className="cnn-nav-link py-2 font-semibold"
+                    className="nrb-nav-link py-2 font-semibold"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     {item.label}
@@ -168,8 +168,8 @@ const Header = ({ lang, dictionary }: { lang: Locale, dictionary: any }) => {
         </div>
 
         {/* Category Strip */}
-        <div className="border-t border-cnn-border bg-white">
-          <div className="cnn-container">
+        <div className="border-t border-nrb-border bg-white">
+          <div className="nrb-container">
             <NavBar lang={lang} />
           </div>
         </div>

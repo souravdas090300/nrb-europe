@@ -5,27 +5,27 @@
 @tailwind utilities;
 
 :root {
-  /* CNN Color Palette */
-  --cnn-red: #cc0000;
-  --cnn-red-dark: #b30000;
-  --cnn-blue: #0c2340;
-  --cnn-gray-light: #f2f2f2;
-  --cnn-gray-dark: #333333;
-  --cnn-text: #1a1a1a;
-  --cnn-text-light: #666666;
-  --cnn-border: #e0e0e0;
-  --cnn-live: #ff4d4d;
+  /* NRB Europe Color Palette */
+  --nrb-red: #cc0000;
+  --nrb-red-dark: #b30000;
+  --nrb-blue: #0c2340;
+  --nrb-gray-light: #f2f2f2;
+  --nrb-gray-dark: #333333;
+  --nrb-text: #1a1a1a;
+  --nrb-text-light: #666666;
+  --nrb-border: #e0e0e0;
+  --nrb-live: #ff4d4d;
 }
 
 @layer base {
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    color: var(--cnn-text);
+    color: var(--nrb-text);
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-white text-cnn-text antialiased;
+    @apply bg-white text-nrb-text antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -46,21 +46,21 @@
 }
 
 @layer components {
-  /* CNN Style Components */
-  .cnn-red-bg {
-    background-color: var(--cnn-red);
+  /* NRB Europe Style Components */
+  .nrb-red-bg {
+    background-color: var(--nrb-red);
   }
 
-  .cnn-red-text {
-    color: var(--cnn-red);
+  .nrb-red-text {
+    color: var(--nrb-red);
   }
 
-  .cnn-blue-bg {
-    background-color: var(--cnn-blue);
+  .nrb-blue-bg {
+    background-color: var(--nrb-blue);
   }
 
-  .cnn-blue-text {
-    color: var(--cnn-blue);
+  .nrb-blue-text {
+    color: var(--nrb-blue);
   }
 
   /* Typography */
@@ -85,81 +85,81 @@
   }
 
   /* Buttons */
-  .cnn-button {
+  .nrb-button {
     @apply px-6 py-3 font-semibold rounded-none transition-all duration-200;
   }
 
-  .cnn-button-primary {
-    @apply cnn-button bg-[var(--cnn-red)] text-white hover:bg-[var(--cnn-red-dark)];
+  .nrb-button-primary {
+    @apply nrb-button bg-[var(--nrb-red)] text-white hover:bg-[var(--nrb-red-dark)];
   }
 
-  .cnn-button-secondary {
-    @apply cnn-button bg-transparent border-2 border-[var(--cnn-red)] text-[var(--cnn-red)] hover:bg-[var(--cnn-red)] hover:text-white;
+  .nrb-button-secondary {
+    @apply nrb-button bg-transparent border-2 border-[var(--nrb-red)] text-[var(--nrb-red)] hover:bg-[var(--nrb-red)] hover:text-white;
   }
 
-  .cnn-button-outline {
-    @apply cnn-button bg-transparent border border-[var(--cnn-border)] text-[var(--cnn-text)] hover:border-[var(--cnn-red)];
+  .nrb-button-outline {
+    @apply nrb-button bg-transparent border border-[var(--nrb-border)] text-[var(--nrb-text)] hover:border-[var(--nrb-red)];
   }
 
   /* Cards */
-  .cnn-card {
-    @apply bg-white border border-[var(--cnn-border)] transition-all duration-200 hover:shadow-lg;
+  .nrb-card {
+    @apply bg-white border border-[var(--nrb-border)] transition-all duration-200 hover:shadow-lg;
   }
 
-  .cnn-card-hover {
-    @apply hover:border-[var(--cnn-red)] hover:-translate-y-1;
+  .nrb-card-hover {
+    @apply hover:border-[var(--nrb-red)] hover:-translate-y-1;
   }
 
   /* Badges */
-  .cnn-badge {
+  .nrb-badge {
     @apply inline-block px-3 py-1 text-xs font-bold uppercase tracking-wider;
   }
 
-  .cnn-badge-breaking {
-    @apply cnn-badge bg-[var(--cnn-live)] text-white;
+  .nrb-badge-breaking {
+    @apply nrb-badge bg-[var(--nrb-live)] text-white;
   }
 
-  .cnn-badge-category {
-    @apply cnn-badge bg-[var(--cnn-gray-light)] text-[var(--cnn-text)];
+  .nrb-badge-category {
+    @apply nrb-badge bg-[var(--nrb-gray-light)] text-[var(--nrb-text)];
   }
 
-  .cnn-badge-live {
-    @apply cnn-badge bg-red-600 text-white animate-pulse;
+  .nrb-badge-live {
+    @apply nrb-badge bg-red-600 text-white animate-pulse;
   }
 
   /* Dividers */
-  .cnn-divider {
-    @apply border-t border-[var(--cnn-border)] my-6;
+  .nrb-divider {
+    @apply border-t border-[var(--nrb-border)] my-6;
   }
 
-  .cnn-divider-red {
-    @apply border-t-2 border-[var(--cnn-red)] my-6;
+  .nrb-divider-red {
+    @apply border-t-2 border-[var(--nrb-red)] my-6;
   }
 
   /* Layout */
-  .cnn-container {
+  .nrb-container {
     @apply container mx-auto px-4;
   }
 
-  .cnn-section {
+  .nrb-section {
     @apply py-8 md:py-12;
   }
 
   /* Navigation */
-  .cnn-nav-link {
-    @apply font-semibold text-[var(--cnn-text)] hover:text-[var(--cnn-red)] transition-colors duration-200;
+  .nrb-nav-link {
+    @apply font-semibold text-[var(--nrb-text)] hover:text-[var(--nrb-red)] transition-colors duration-200;
   }
 
-  .cnn-nav-link-active {
-    @apply text-[var(--cnn-red)] border-b-2 border-[var(--cnn-red)];
+  .nrb-nav-link-active {
+    @apply text-[var(--nrb-red)] border-b-2 border-[var(--nrb-red)];
   }
 
   /* Grid Layouts */
-  .cnn-grid-3 {
+  .nrb-grid-3 {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
   }
 
-  .cnn-grid-4 {
+  .nrb-grid-4 {
     @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6;
   }
 }
@@ -244,16 +244,16 @@
 }
 
 /* Gradient backgrounds */
-.bg-gradient-cnn {
-  background: linear-gradient(135deg, var(--cnn-red) 0%, var(--cnn-blue) 100%);
+.bg-gradient-nrb {
+  background: linear-gradient(135deg, var(--nrb-red) 0%, var(--nrb-blue) 100%);
 }
 
 /* Shadows */
-.shadow-cnn {
+.shadow-nrb {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
-.shadow-cnn-lg {
+.shadow-nrb-lg {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
 }
 
@@ -267,11 +267,11 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--cnn-red);
+  background: var(--nrb-red);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cnn-red-dark);
+  background: var(--nrb-red-dark);
 }
 
 /* Focus styles */

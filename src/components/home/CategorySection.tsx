@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { urlFor } from '@/lib/sanity/client'
@@ -32,24 +32,24 @@ const CategorySection = ({ lang, categoryName, categorySlug, articles }: Categor
   const [featuredArticle, ...sideArticles] = articles
 
   return (
-    <section className="cnn-section">
+    <section className="nrb-section">
       <div className="flex items-center justify-between mb-6">
         <h2 className="headline-2xl">{categoryName}</h2>
         <Link 
           href={`/${lang}/category/${categorySlug}`}
-          className="text-sm font-semibold text-cnn-red hover:underline uppercase tracking-wide"
+          className="text-sm font-semibold text-nrb-red hover:underline uppercase tracking-wide"
         >
-          More {categoryName} →
+          More {categoryName} â†’
         </Link>
       </div>
 
-      <div className="cnn-grid-3 gap-6">
+      <div className="nrb-grid-3 gap-6">
         {/* Featured Article - 2/3 width */}
         <Link 
           href={`/${lang}/news/${featuredArticle.slug.current}`}
           className="md:col-span-2 group block"
         >
-          <div className="relative h-[400px] bg-cnn-gray-light overflow-hidden">
+          <div className="relative h-[400px] bg-nrb-gray-light overflow-hidden">
             {featuredArticle.mainImage && (
               <Image
                 src={urlFor(featuredArticle.mainImage).width(900).height(600).url()}
@@ -70,7 +70,7 @@ const CategorySection = ({ lang, categoryName, categorySlug, articles }: Categor
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              <h3 className="headline-xl text-white mb-2 group-hover:text-cnn-red transition-colors">
+              <h3 className="headline-xl text-white mb-2 group-hover:text-nrb-red transition-colors">
                 {featuredArticle.title}
               </h3>
               {featuredArticle.excerpt && (
@@ -94,7 +94,7 @@ const CategorySection = ({ lang, categoryName, categorySlug, articles }: Categor
               className="group"
             >
               <div className="flex gap-3">
-                <div className="relative w-32 h-24 flex-shrink-0 bg-cnn-gray-light overflow-hidden">
+                <div className="relative w-32 h-24 flex-shrink-0 bg-nrb-gray-light overflow-hidden">
                   {article.mainImage && (
                     <Image
                       src={urlFor(article.mainImage).width(200).height(150).url()}
@@ -110,10 +110,10 @@ const CategorySection = ({ lang, categoryName, categorySlug, articles }: Categor
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-cnn-text line-clamp-3 group-hover:text-cnn-red transition-colors">
+                  <h4 className="text-sm font-bold text-nrb-text line-clamp-3 group-hover:text-nrb-red transition-colors">
                     {article.title}
                   </h4>
-                  <p className="text-xs text-cnn-gray mt-1">
+                  <p className="text-xs text-nrb-gray mt-1">
                     {formatDate(article.publishedAt)}
                   </p>
                 </div>
@@ -127,3 +127,4 @@ const CategorySection = ({ lang, categoryName, categorySlug, articles }: Categor
 }
 
 export default CategorySection
+

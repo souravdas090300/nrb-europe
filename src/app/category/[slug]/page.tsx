@@ -59,21 +59,21 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   )
 
   return (
-    <div className="cnn-container py-8">
+    <div className="nrb-container py-8">
       {/* Category Header */}
       <div className="mb-8">
-        <h1 className="headline-3xl text-cnn-text mb-2">{category.title}</h1>
+        <h1 className="headline-3xl text-nrb-text mb-2">{category.title}</h1>
         {category.description && (
-          <p className="text-lg text-cnn-gray">{category.description}</p>
+          <p className="text-lg text-nrb-gray">{category.description}</p>
         )}
-        <div className="h-1 w-20 bg-cnn-red mt-4"></div>
+        <div className="h-1 w-20 bg-nrb-red mt-4"></div>
       </div>
 
       {/* Articles Grid */}
-      <div className="cnn-grid-3 gap-6">
+      <div className="nrb-grid-3 gap-6">
         {articles.length === 0 ? (
-          <div className="col-span-full cnn-card text-center py-20">
-            <p className="text-cnn-text text-lg">No articles found in this category yet.</p>
+          <div className="col-span-full nrb-card text-center py-20">
+            <p className="text-nrb-text text-lg">No articles found in this category yet.</p>
           </div>
         ) : (
           articles.map((article: any) => (

@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { urlFor } from '@/lib/sanity/client'
@@ -29,14 +29,14 @@ interface HeroSectionProps {
 
 const HeroSection = ({ lang, mainArticle, sideArticles }: HeroSectionProps) => {
   return (
-    <section className="cnn-section">
-      <div className="cnn-grid-3 gap-4">
+    <section className="nrb-section">
+      <div className="nrb-grid-3 gap-4">
         {/* Main Featured Article - 2/3 width */}
         <Link 
           href={`/${lang}/news/${mainArticle.slug.current}`}
           className="md:col-span-2 group block"
         >
-          <div className="relative h-[500px] bg-cnn-gray-light overflow-hidden">
+          <div className="relative h-[500px] bg-nrb-gray-light overflow-hidden">
             {mainArticle.mainImage && (
               <Image
                 src={urlFor(mainArticle.mainImage).width(1200).height(800).url()}
@@ -60,7 +60,7 @@ const HeroSection = ({ lang, mainArticle, sideArticles }: HeroSectionProps) => {
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-6">
-              <h1 className="headline-3xl text-white mb-3 group-hover:text-cnn-red transition-colors">
+              <h1 className="headline-3xl text-white mb-3 group-hover:text-nrb-red transition-colors">
                 {mainArticle.title}
               </h1>
               {mainArticle.excerpt && (
@@ -95,7 +95,7 @@ const HeroSection = ({ lang, mainArticle, sideArticles }: HeroSectionProps) => {
               href={`/${lang}/news/${article.slug.current}`}
               className="group flex flex-col h-[158px]"
             >
-              <div className="relative h-32 bg-cnn-gray-light overflow-hidden">
+              <div className="relative h-32 bg-nrb-gray-light overflow-hidden">
                 {article.mainImage && (
                   <Image
                     src={urlFor(article.mainImage).width(400).height(300).url()}
@@ -115,7 +115,7 @@ const HeroSection = ({ lang, mainArticle, sideArticles }: HeroSectionProps) => {
                   )}
                 </div>
               </div>
-              <h3 className="text-base font-bold text-cnn-text mt-2 line-clamp-2 group-hover:text-cnn-red transition-colors">
+              <h3 className="text-base font-bold text-nrb-text mt-2 line-clamp-2 group-hover:text-nrb-red transition-colors">
                 {article.title}
               </h3>
             </Link>
@@ -127,3 +127,4 @@ const HeroSection = ({ lang, mainArticle, sideArticles }: HeroSectionProps) => {
 }
 
 export default HeroSection
+

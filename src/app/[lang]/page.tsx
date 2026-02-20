@@ -126,7 +126,7 @@ export default async function Home({
 
   return (
     <main className="min-h-screen bg-white">
-      {/* CNN-Style Hero Section */}
+      {/* NRB Europe Hero Section */}
       <HeroSection />
       
       {/* Category Grid */}

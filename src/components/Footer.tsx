@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import Link from 'next/link'
@@ -56,8 +56,8 @@ const Footer = ({ lang = 'en' }: { lang?: string }) => {
   ]
 
   return (
-    <footer className="bg-cnn-blue text-white mt-12">
-      <div className="cnn-container py-12">
+    <footer className="bg-nrb-blue text-white mt-12">
+      <div className="nrb-container py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {sections.map((section) => (
             <div key={section.title}>
@@ -81,11 +81,11 @@ const Footer = ({ lang = 'en' }: { lang?: string }) => {
         <div className="border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-cnn-red rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-nrb-red rounded-full flex items-center justify-center">
                 <span className="text-white font-black text-lg">NRB</span>
               </div>
               <div>
-                <p className="text-sm text-gray-300">© {currentYear} NRB Europe</p>
+                <p className="text-sm text-gray-300">Â© {currentYear} NRB Europe</p>
                 <p className="text-xs text-gray-400">Your trusted source for European news</p>
               </div>
             </div>
@@ -99,7 +99,7 @@ const Footer = ({ lang = 'en' }: { lang?: string }) => {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 bg-gray-700 hover:bg-cnn-red rounded-full flex items-center justify-center transition-colors"
+                    className="w-10 h-10 bg-gray-700 hover:bg-nrb-red rounded-full flex items-center justify-center transition-colors"
                     aria-label={social.label}
                   >
                     <Icon className="w-5 h-5" />

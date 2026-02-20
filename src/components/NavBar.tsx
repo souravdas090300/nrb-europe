@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import Link from 'next/link'
 import { Locale } from '@/lib/i18n-config'
 import { categories } from '@/lib/constants'
@@ -10,7 +10,7 @@ const NavBar = ({ lang }: { lang: Locale }) => {
         <Link
           key={category.slug}
           href={`/${lang}/category/${category.slug}`}
-          className="cnn-nav-link whitespace-nowrap text-sm font-semibold uppercase tracking-wide"
+          className="nrb-nav-link whitespace-nowrap text-sm font-semibold uppercase tracking-wide"
         >
           {category.name}
         </Link>

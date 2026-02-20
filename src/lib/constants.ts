@@ -25,7 +25,7 @@ export const ORGANIZATION = {
   },
 }
 
-// CNN-Style Configuration
+// NRB Europe Configuration
 export const categories = [
   { name: 'World', slug: 'world', color: 'bg-blue-100 text-blue-800' },
   { name: 'Politics', slug: 'politics', color: 'bg-red-100 text-red-800' },
