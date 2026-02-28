@@ -1,8 +1,14 @@
+<<<<<<< Updated upstream
 import { urlFor } from '@/lib/sanity/client'
+=======
+import { client, urlFor } from '../../../../lib/sanity/client'
+import { categoryBySlugQuery } from '../../../../lib/sanity/queries'
+>>>>>>> Stashed changes
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
+<<<<<<< Updated upstream
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import {
@@ -15,29 +21,78 @@ import {
 // Generate static params
 export async function generateStaticParams() {
   return generateCategoryStaticParams()
+=======
+
+// Generate static params
+export async function generateStaticParams() {
+  const categories = await client.fetch(`*[_type == "category"]{ "slug": slug.current }`)
+  return categories.map((category: any) => ({
+    slug: category.slug,
+  }))
+>>>>>>> Stashed changes
 }
 
 // Generate metadata
 export async function generateMetadata({ params }: { params: Promise<{ slug: string, lang: string }> }): Promise<Metadata> {
   const { slug } = await params
+<<<<<<< Updated upstream
   return generateCategoryMetadata(slug)
+=======
+  const category = await client.fetch(categoryBySlugQuery, { slug })
+  
+  if (!category) {
+    return {
+      title: 'Category Not Found - NRB Europe',
+    }
+  }
+
+  return {
+    title: `${category.title} News - NRB Europe`,
+    description: category.description || `Latest ${category.title} news for NRBs in Europe`,
+  }
+>>>>>>> Stashed changes
 }
 
 export const revalidate = 60 // Revalidate every minute
 
+<<<<<<< Updated upstream
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string, lang: Locale }> }) {
   const { slug, lang } = await params
   const [category, dictionary] = await Promise.all([
     getCategoryBySlug(slug),
     getDictionary(lang),
   ])
+=======
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string, lang: string }> }) {
+  const { slug, lang } = await params
+  const category = await client.fetch(categoryBySlugQuery, { slug })
+>>>>>>> Stashed changes
   
   if (!category) {
     notFound()
   }
 
   // Fetch articles that reference this category
+<<<<<<< Updated upstream
   const articles = await getCategoryArticles(slug)
+=======
+  const articles = await client.fetch(
+    `*[_type == "post" && references(*[_type == "category" && slug.current == $slug][0]._id)] | order(publishedAt desc) {
+      _id,
+      title,
+      slug,
+      excerpt,
+      mainImage,
+      publishedAt,
+      isLive,
+      body,
+      "category": categories[0]->title,
+      "categorySlug": categories[0]->slug.current,
+      "author": author->name
+    }`,
+    { slug }
+  )
+>>>>>>> Stashed changes
 
   const formatTimeAgo = (date: string) => {
     const now = new Date()
@@ -61,8 +116,13 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
 
         {articles.length === 0 ? (
           <div className="text-center py-20">
+<<<<<<< Updated upstream
             <h2 className="headline-2xl text-nrb-text mb-4">{dictionary.article.noArticlesYet}</h2>
             <p className="text-nrb-text-light">{dictionary.article.checkBackSoon}</p>
+=======
+            <h2 className="headline-2xl text-nrb-text mb-4">No articles yet</h2>
+            <p className="text-nrb-text-light">Check back soon for updates</p>
+>>>>>>> Stashed changes
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
