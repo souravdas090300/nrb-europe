@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server'
 import { client } from '@/lib/sanity/client'
+import * as Sentry from '@sentry/nextjs'
+
+const { logger } = Sentry
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  return Sentry.startSpan(
+    { op: 'cron', name: 'publish-scheduled-posts' },
+    async (span) => {
   try {
     // Get scheduled posts that are ready to publish
     const now = new Date().toISOString()
@@ -41,11 +47,16 @@ export async function GET() {
           
           return { id: post._id, title: post.title, success: true }
         } catch (error) {
-          console.error(`Failed to publish ${post._id}:`, error)
+          Sentry.captureException(error)
+          logger.error(logger.fmt`Failed to publish post ${post._id}: ${post.title}`)
           return { id: post._id, title: post.title, success: false, error }
         }
       })
     )
+
+    span.setAttribute('posts.total', scheduledPosts.length)
+    span.setAttribute('posts.published', results.filter((r: any) => r.success).length)
+    span.setAttribute('posts.failed', results.filter((r: any) => !r.success).length)
 
     return NextResponse.json({
       message: 'Scheduled posts processed',
@@ -53,10 +64,13 @@ export async function GET() {
       results
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('Cron job error:', error)
     return NextResponse.json(
       { error: 'Failed to process scheduled posts' },
       { status: 500 }
     )
   }
+    },
+  )
 }

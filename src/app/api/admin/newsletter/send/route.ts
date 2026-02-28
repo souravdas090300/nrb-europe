@@ -3,6 +3,9 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email'
+import * as Sentry from '@sentry/nextjs'
+
+const { logger } = Sentry
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +40,9 @@ export async function POST(request: NextRequest) {
 
         await sendEmail({ to: subscriber.email, subject, html: emailHtml })
         sent++
-      } catch {
+      } catch (error) {
+        Sentry.captureException(error)
+        logger.warn(logger.fmt`Failed to send newsletter to ${subscriber.email}`)
         failed++
       }
     }
@@ -49,6 +54,7 @@ export async function POST(request: NextRequest) {
       failed,
     })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('Error sending newsletter:', error)
     return NextResponse.json({ error: 'Failed to send newsletter' }, { status: 500 })
   }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client } from '@/lib/sanity/client'
+import { invalidateCache, invalidateCachePattern } from '@/lib/redis'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     
+    // Invalidate Redis caches when content changes
+    await Promise.all([
+      invalidateCache('breaking-news'),
+      invalidateCachePattern('search:*'),
+      invalidateCachePattern('stats:*'),
+    ])
+
     // Check if this is a breaking news article that just got published
     if (body.isBreaking && body.status === 'published') {
       console.log('Breaking news published:', body.title)

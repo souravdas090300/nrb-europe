@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client } from '@/lib/sanity/client'
+import { cached } from '@/lib/redis'
 
 type DashboardStats = {
   totalViews: number
@@ -29,33 +30,37 @@ export async function GET(request: NextRequest) {
     const currentPeriodStartIso = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
     const previousPeriodStartIso = new Date(Date.now() - days * 2 * 24 * 60 * 60 * 1000).toISOString()
 
-    const [currentStats, previousStats, topArticles, countryStats] = await Promise.all([
-      client.fetch(
-        `{
-          "articlesPublished": count(*[_type == "post" && defined(publishedAt) && publishedAt >= $start]),
-          "totalViews": coalesce(sum(*[_type == "post" && defined(publishedAt) && publishedAt >= $start].views), 0)
-        }`,
-        { start: currentPeriodStartIso }
-      ),
-      client.fetch(
-        `{
-          "articlesPublished": count(*[_type == "post" && defined(publishedAt) && publishedAt >= $start && publishedAt < $end]),
-          "totalViews": coalesce(sum(*[_type == "post" && defined(publishedAt) && publishedAt >= $start && publishedAt < $end].views), 0)
-        }`,
-        { start: previousPeriodStartIso, end: currentPeriodStartIso }
-      ),
-      client.fetch(
-        `*[_type == "post"] | order(views desc, publishedAt desc)[0...5] {
-          "title": coalesce(title, "Untitled"),
-          "views": coalesce(views, 0)
-        }`
-      ),
-      client.fetch(
-        `*[_type == "post" && defined(country)] {
-          "name": country
-        }`
-      ),
-    ])
+    const [currentStats, previousStats, topArticles, countryStats] = await cached(
+      `stats:${range}`,
+      () => Promise.all([
+        client.fetch(
+          `{
+            "articlesPublished": count(*[_type == "post" && defined(publishedAt) && publishedAt >= $start]),
+            "totalViews": coalesce(sum(*[_type == "post" && defined(publishedAt) && publishedAt >= $start].views), 0)
+          }`,
+          { start: currentPeriodStartIso }
+        ),
+        client.fetch(
+          `{
+            "articlesPublished": count(*[_type == "post" && defined(publishedAt) && publishedAt >= $start && publishedAt < $end]),
+            "totalViews": coalesce(sum(*[_type == "post" && defined(publishedAt) && publishedAt >= $start && publishedAt < $end].views), 0)
+          }`,
+          { start: previousPeriodStartIso, end: currentPeriodStartIso }
+        ),
+        client.fetch(
+          `*[_type == "post"] | order(views desc, publishedAt desc)[0...5] {
+            "title": coalesce(title, "Untitled"),
+            "views": coalesce(views, 0)
+          }`
+        ),
+        client.fetch(
+          `*[_type == "post" && defined(country)] {
+            "name": country
+          }`
+        ),
+      ]),
+      120, // 2 min TTL
+    )
 
     const currentViews = Number(currentStats?.totalViews || 0)
     const previousViews = Number(previousStats?.totalViews || 0)

@@ -7,8 +7,19 @@ let _builder: ReturnType<typeof imageUrlBuilder> | undefined
 
 function getClient() {
   if (!_client) {
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    if (!projectId) {
+      // Return a stub client that returns empty results during build when env vars are missing
+      return new Proxy({} as ReturnType<typeof createClient>, {
+        get(_, prop) {
+          if (prop === 'fetch') return async () => []
+          if (prop === 'config') return () => ({})
+          return undefined
+        },
+      })
+    }
     _client = createClient({
-      projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID!,
+      projectId,
       dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || 'production',
       apiVersion: '2026-01-29',
       useCdn: process.env.NODE_ENV === 'production',
@@ -32,7 +43,12 @@ export const client: ReturnType<typeof createClient> = new Proxy(
 
 export function urlFor(source: any) {
   if (!_builder) {
-    _builder = imageUrlBuilder(getClient())
+    const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+    if (!projectId) {
+      // Return a stub that won't crash
+      return { url: () => '', width: () => ({ url: () => '' }), height: () => ({ url: () => '' }) } as any
+    }
+    _builder = imageUrlBuilder(getClient() as any)
   }
   return _builder.image(source)
 }

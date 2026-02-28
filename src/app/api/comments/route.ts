@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { cached, invalidateCache } from '@/lib/redis'
 
 // GET /api/comments?articleId=xxx
 export async function GET(request: NextRequest) {
@@ -13,24 +14,28 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'articleId required' }, { status: 400 })
     }
 
-    const comments = await prisma.comment.findMany({
-      where: {
-        articleId,
-        parentId: null,
-        status: 'approved',
-      },
-      include: {
-        user: { select: { id: true, name: true, image: true } },
-        replies: {
-          where: { status: 'approved' },
-          include: {
-            user: { select: { id: true, name: true, image: true } },
-          },
-          orderBy: { createdAt: 'asc' },
+    const comments = await cached(
+      `comments:${articleId}`,
+      () => prisma.comment.findMany({
+        where: {
+          articleId,
+          parentId: null,
+          status: 'approved',
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    })
+        include: {
+          user: { select: { id: true, name: true, image: true } },
+          replies: {
+            where: { status: 'approved' },
+            include: {
+              user: { select: { id: true, name: true, image: true } },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      60, // 1 min TTL
+    )
 
     return NextResponse.json(comments)
   } catch (error) {
@@ -73,6 +78,9 @@ export async function POST(request: NextRequest) {
         user: { select: { id: true, name: true, image: true } },
       },
     })
+
+    // Invalidate comments cache for this article
+    await invalidateCache(`comments:${articleId}`)
 
     return NextResponse.json(comment, { status: 201 })
   } catch (error) {

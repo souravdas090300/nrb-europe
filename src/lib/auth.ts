@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
+import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
@@ -7,6 +8,10 @@ import bcrypt from 'bcryptjs'
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID ?? '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
+    }),
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -35,10 +40,16 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.role = (user as any).role
         token.id = user.id
+        // For OAuth sign-ins, fetch role from DB since it's not on the user object
+        if (account?.provider !== 'credentials') {
+          const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+          token.role = dbUser?.role ?? 'subscriber'
+        } else {
+          token.role = (user as any).role
+        }
       }
       return token
     },

@@ -229,17 +229,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   <LogOut size={14} /> Sign Out
                 </button>
               </>
-            ) : (
-              <Link
-                href="/login"
-                onClick={() => setMenuOpen(false)}
-                className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                  theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-                }`}
-              >
-                <User size={14} /> Sign In
-              </Link>
-            )}
+            ) : null}
             {hamburgerCategories.map((cat) => (
               <Link
                 key={cat.slug}

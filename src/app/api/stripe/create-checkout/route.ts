@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { stripe, PLANS, getStripeCustomer } from '@/lib/stripe'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: Request) {
   const session = await getServerSession(authOptions)
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ sessionId: checkoutSession.id })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('Stripe checkout error:', error)
     return NextResponse.json(
       { error: 'Failed to create checkout session' },

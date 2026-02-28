@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 import { headers } from 'next/headers'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: Request) {
   const body = await request.text()
@@ -17,13 +18,21 @@ export async function POST(request: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     )
   } catch (err) {
+    Sentry.captureException(err)
     return NextResponse.json(
       { error: 'Webhook signature verification failed' },
       { status: 400 }
     )
   }
 
-  switch (event.type) {
+  return Sentry.startSpan(
+    { op: 'webhook', name: `stripe.${event.type}` },
+    async (span) => {
+      span.setAttribute('stripe.event_type', event.type)
+      span.setAttribute('stripe.event_id', event.id)
+
+      try {
+        switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object as any
 
@@ -103,5 +112,14 @@ export async function POST(request: Request) {
     }
   }
 
-  return NextResponse.json({ received: true })
+        return NextResponse.json({ received: true })
+      } catch (error) {
+        Sentry.captureException(error)
+        return NextResponse.json(
+          { error: 'Webhook processing failed' },
+          { status: 500 }
+        )
+      }
+    },
+  )
 }

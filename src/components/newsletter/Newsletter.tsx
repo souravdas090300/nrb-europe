@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Send, Check } from 'lucide-react';
+import * as Sentry from '@sentry/nextjs';
 
 const Newsletter: React.FC<{ dictionary?: any }> = ({ dictionary }) => {
   const [email, setEmail] = useState('');
@@ -14,11 +15,16 @@ const Newsletter: React.FC<{ dictionary?: any }> = ({ dictionary }) => {
     setLoading(true);
     
     try {
-      const res = await fetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
+      const res = await Sentry.startSpan(
+        { op: 'http.client', name: 'POST /api/newsletter/subscribe' },
+        async () => {
+          return await fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+          });
+        },
+      );
       
       const data = await res.json();
       
@@ -29,7 +35,8 @@ const Newsletter: React.FC<{ dictionary?: any }> = ({ dictionary }) => {
       } else {
         alert(data.error || 'Failed to subscribe');
       }
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error);
       alert('Failed to subscribe. Please try again.');
     } finally {
       setLoading(false);

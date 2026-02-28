@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { sendEmail } from '@/lib/email'
 import crypto from 'crypto'
+import * as Sentry from '@sentry/nextjs'
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,11 +50,13 @@ export async function POST(request: NextRequest) {
         `,
       })
     } catch (emailError) {
+      Sentry.captureException(emailError)
       console.error('Failed to send welcome email:', emailError)
     }
 
     return NextResponse.json({ success: true, message: 'Successfully subscribed!' })
   } catch (error) {
+    Sentry.captureException(error)
     console.error('Newsletter error:', error)
     return NextResponse.json({ error: 'Failed to subscribe' }, { status: 500 })
   }
