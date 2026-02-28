@@ -2,6 +2,7 @@ import { defineField, defineType } from 'sanity';
 import { UserIcon } from '@sanity/icons';
 import { ROLES, getUserRole } from '../../config/roles';
 import RoleSelector from './roleSelector';
+import { socialProfileFields } from '@/sanity/shared/socialProfileFields';
 
 export default defineType({
   name: 'user',
@@ -88,11 +89,7 @@ export default defineType({
       name: 'socialLinks',
       title: 'Social Links',
       type: 'object',
-      fields: [
-        { name: 'twitter', type: 'url', title: 'Twitter' },
-        { name: 'linkedin', type: 'url', title: 'LinkedIn' },
-        { name: 'website', type: 'url', title: 'Website' },
-      ],
+      fields: socialProfileFields,
     }),
     
     defineField({

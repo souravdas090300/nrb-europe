@@ -1,14 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import '@/styles/globals.css'
-import Header from '@/components/Header'
-import Footer from '@/components/Footer'
-import GoogleAnalytics from '@/components/GoogleAnalytics'
-import PWAInstallPrompt from '@/components/PWAInstallPrompt'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import BreakingNewsTicker from '@/components/layout/BreakingNewsTicker'
+import ThemeProvider from '@/components/ui/ThemeProvider'
+import GoogleAnalytics from '@/components/ui/GoogleAnalytics'
+import PWAInstallPrompt from '@/components/pwa/PWAInstallPrompt'
+import ServiceWorkerRegistration from '@/components/pwa/ServiceWorkerRegistration'
 import OrganizationStructuredData from '@/components/seo/OrganizationStructuredData'
 import { i18n, type Locale } from '@/lib/i18n-config'
-
-const inter = Inter({ subsets: ['latin'] })
 
 export async function generateStaticParams() {
   return i18n.locales.map((locale) => ({ lang: locale }))
@@ -58,10 +57,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-  },
   manifest: '/manifest.json',
   themeColor: '#dc2626',
   appleWebApp: {
@@ -71,11 +66,9 @@ export const metadata: Metadata = {
   },
 }
 
-import BreakingNewsBar from '@/components/layout/BreakingNewsBar'
-import LiveIndicator from '@/components/ui/LiveIndicator'
 import { getDictionary } from '@/lib/get-dictionary'
 
-export default async function RootLayout({
+export default async function LangLayout({
   children,
   params,
 }: {
@@ -86,24 +79,19 @@ export default async function RootLayout({
   const dictionary = await getDictionary(lang)
   
   return (
-    <html lang={lang}>
-      <head>
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="news_keywords" content="politics,business,immigration,community,europe,bangladesh" />
-        <meta name="original-source" content="NRB Europe" />
-        <OrganizationStructuredData />
-      </head>
-      <body className={`${inter.className} bg-white text-nrb-text`}>
+    <>
+      <OrganizationStructuredData />
+      <ThemeProvider>
         <GoogleAnalytics />
-        <BreakingNewsBar />
-        <LiveIndicator />
+        <BreakingNewsTicker />
         <Header lang={lang} dictionary={dictionary} />
-        <div className="min-h-screen">{children}</div>
-        <Footer lang={lang} />
+        <div className="flex flex-col min-h-screen pt-[80px]">
+          <div className="flex-1">{children}</div>
+          <Footer lang={lang} dictionary={dictionary} />
+        </div>
         <PWAInstallPrompt />
-      </body>
-    </html>
+        <ServiceWorkerRegistration />
+      </ThemeProvider>
+    </>
   )
 }

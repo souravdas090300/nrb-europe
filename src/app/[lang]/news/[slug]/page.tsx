@@ -1,5 +1,5 @@
 import { client } from '@/lib/sanity/client'
-import { articleBySlugQuery } from '@/sanity/queries/articleQueries'
+import { articleBySlugQuery } from '@/lib/sanity/queries'
 import { urlFor } from '@/lib/sanity/client'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -7,7 +7,6 @@ import { Locale } from '@/lib/i18n-config'
 import type { Metadata } from 'next'
 
 export const revalidate = 60 // Auto-update every 60 seconds
-export const dynamic = 'force-static' // Force static generation for speed
 
 interface PageProps {
   params: Promise<{

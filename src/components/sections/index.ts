@@ -1,0 +1,6 @@
+export { default as HeroSection } from './HeroSection'
+export { default as Hero } from './Hero'
+export { default as TrendingStories } from './TrendingStories'
+export { default as LatestStories } from './LatestStories'
+export { default as VideoSection } from './VideoSection'
+export { default as CategorySection } from './CategorySection'

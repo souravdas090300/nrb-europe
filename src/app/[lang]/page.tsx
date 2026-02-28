@@ -1,12 +1,11 @@
-import { getDictionary } from '@/lib/get-dictionary'
 import { Locale } from '@/lib/i18n-config'
+import { getDictionary } from '@/lib/get-dictionary'
 import { client } from '@/lib/sanity/client'
-import HeroSection from '@/components/HeroSection'
-import CategoryGrid from '@/components/CategoryGrid'
-import TrendingStories from '@/components/TrendingStories'
-import VideoSection from '@/components/VideoSection'
-import LatestStories from '@/components/LatestStories'
-import Newsletter from '@/components/Newsletter'
+import HeroSection from '@/components/sections/HeroSection'
+import TrendingStories from '@/components/sections/TrendingStories'
+import VideoSection from '@/components/sections/VideoSection'
+import LatestStories from '@/components/sections/LatestStories'
+import Newsletter from '@/components/newsletter/Newsletter'
 
 // ISR: Revalidate every 60 seconds for fresh content
 export const revalidate = 60
@@ -20,7 +19,6 @@ const heroArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[0..3] {
   mainImage,
   publishedAt,
   isLive,
-  body,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
   "author": author->name
@@ -35,19 +33,6 @@ const latestArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[4..9] 
   publishedAt,
   isLive,
   body,
-  "category": categories[0]->title,
-  "categorySlug": categories[0]->slug.current,
-  "author": author->name
-}`
-
-const categoryArticlesQuery = (categorySlug: string) => `*[_type == "post" && references(*[_type=="category" && slug.current=="${categorySlug}"]._id)] | order(publishedAt desc)[0..3] {
-  _id,
-  title,
-  slug,
-  excerpt,
-  mainImage,
-  publishedAt,
-  isLive,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
   "author": author->name
@@ -72,22 +57,16 @@ const videoArticlesQuery = `*[_type == "post" && defined(videoUrl)] | order(publ
 
 async function getHomeData() {
   try {
-    const [heroArticles, latestArticles, worldArticles, politicsArticles, businessArticles, trendingArticles, videoArticles] = await Promise.all([
+    const [heroArticles, latestArticles, trendingArticles, videoArticles] = await Promise.all([
       client.fetch(heroArticlesQuery),
       client.fetch(latestArticlesQuery),
-      client.fetch(categoryArticlesQuery('world')),
-      client.fetch(categoryArticlesQuery('politics')),
-      client.fetch(categoryArticlesQuery('business')),
       client.fetch(trendingArticlesQuery),
       client.fetch(videoArticlesQuery),
     ])
-    
+
     return {
       heroArticles,
       latestArticles,
-      worldArticles,
-      politicsArticles,
-      businessArticles,
       trendingArticles,
       videoArticles
     }
@@ -96,9 +75,6 @@ async function getHomeData() {
     return {
       heroArticles: [],
       latestArticles: [],
-      worldArticles: [],
-      politicsArticles: [],
-      businessArticles: [],
       trendingArticles: [],
       videoArticles: []
     }
@@ -106,64 +82,45 @@ async function getHomeData() {
 }
 
 export default async function Home({
-  params,
+  params: _params,
 }: {
   params: Promise<{ lang: Locale }>
 }) {
-  const { lang } = await params
-  const dictionary = await getDictionary(lang)
+  const { lang } = await _params
+  const [dictionary, homeData] = await Promise.all([
+    getDictionary(lang),
+    getHomeData(),
+  ])
   const {
     heroArticles,
     latestArticles,
-    worldArticles,
-    politicsArticles,
-    businessArticles,
     trendingArticles,
     videoArticles
-  } = await getHomeData()
-
-  const [mainArticle, ...sideArticles] = heroArticles
+  } = homeData
 
   return (
-    <main className="min-h-screen bg-white">
-      {/* NRB Europe Hero Section */}
-      <HeroSection />
-      
-      {/* Category Grid */}
-      <CategoryGrid />
-      
-      {/* Latest Stories Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <h2 className="text-3xl font-bold text-gray-900 mb-8 border-l-4 border-red-600 pl-4">
-          Latest Stories
-        </h2>
-        <LatestStories />
-      </div>
-      
-      {/* Trending Stories */}
-      <TrendingStories />
-      
-      {/* Video Section */}
-      <VideoSection />
-      
-      {/* Newsletter */}
-      <Newsletter />
+    <main className="min-h-screen bg-white dark:bg-gray-950">
+      {/* Hero Section — featured stories at the top */}
+      <HeroSection articles={heroArticles} lang={lang} dictionary={dictionary} />
 
-      {/* Empty State - Show if no articles */}
-      {heroArticles.length === 0 && (
-        <div className="text-center py-20 max-w-7xl mx-auto px-4">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">No articles published yet</h2>
-          <p className="text-gray-600 mb-6 text-lg">
-            Visit the Sanity Studio to create your first article
-          </p>
-          <a
-            href="/studio"
-            className="bg-red-600 hover:bg-red-700 text-white font-bold px-8 py-3 rounded-lg inline-block transition"
-          >
-            Go to Studio
-          </a>
+      {/* Latest Stories Grid */}
+      <section className="bg-white dark:bg-gray-950">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 border-l-4 border-red-600 pl-4">
+            {dictionary.home.latestStories}
+          </h2>
+          <LatestStories articles={latestArticles} lang={lang} dictionary={dictionary} />
         </div>
-      )}
+      </section>
+
+      {/* Trending Stories */}
+      <TrendingStories articles={trendingArticles} lang={lang} dictionary={dictionary} />
+
+      {/* Video Section */}
+      <VideoSection videos={videoArticles} lang={lang} dictionary={dictionary} />
+
+      {/* Newsletter */}
+      <Newsletter dictionary={dictionary} />
     </main>
   )
 }

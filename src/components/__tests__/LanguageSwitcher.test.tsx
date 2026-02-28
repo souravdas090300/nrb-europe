@@ -1,5 +1,6 @@
+import '@testing-library/jest-dom'
 import { render, screen, fireEvent } from '@testing-library/react'
-import LanguageSwitcher from '../LanguageSwitcher'
+import LanguageSwitcher from '../ui/LanguageSwitcher'
 
 // Mock next/navigation
 jest.mock('next/navigation', () => ({

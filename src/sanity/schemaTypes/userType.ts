@@ -1,5 +1,6 @@
 import {UserIcon} from '@sanity/icons'
 import {defineField, defineType} from 'sanity'
+import {socialProfileFields} from '@/sanity/shared/socialProfileFields'
 
 export const userType = defineType({
   name: 'user',
@@ -60,11 +61,7 @@ export const userType = defineType({
       name: 'socialMedia',
       title: 'Social Media',
       type: 'object',
-      fields: [
-        {name: 'twitter', type: 'url', title: 'Twitter'},
-        {name: 'linkedin', type: 'url', title: 'LinkedIn'},
-        {name: 'website', type: 'url', title: 'Website'},
-      ],
+      fields: socialProfileFields,
     }),
     defineField({
       name: 'isActive',

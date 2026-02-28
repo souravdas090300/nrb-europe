@@ -4,9 +4,11 @@ import { i18n } from './lib/i18n-config'
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  
-  // Skip middleware for studio routes
-  if (pathname.startsWith('/studio')) {
+
+  const isStaticAsset = /\.[^/]+$/.test(pathname)
+  const isSystemPath = pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/studio') || pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/subscribe')
+
+  if (isStaticAsset || isSystemPath) {
     return NextResponse.next()
   }
   
@@ -44,5 +46,5 @@ function getLocale(request: NextRequest): string {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|studio).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.json|robots.txt|sw.js|studio|admin|login|subscribe).*)'],
 }

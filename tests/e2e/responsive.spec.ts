@@ -5,8 +5,8 @@ test.describe('Responsive Design', () => {
     await page.setViewportSize({ width: 375, height: 667 })
     await page.goto('/en')
     
-    const logo = page.getByAltText('NRB Europe Logo')
-    await expect(logo).toBeVisible()
+    const logoLink = page.getByRole('link', { name: /NRB Europe Home/i })
+    await expect(logoLink).toBeVisible()
   })
 
   test('should display properly on tablet', async ({ page }) => {

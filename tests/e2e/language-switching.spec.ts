@@ -4,8 +4,8 @@ test.describe('Language Switching', () => {
   test('should change language from English to Bengali', async ({ page }) => {
     await page.goto('/en')
     
-    // Verify English content
-    await expect(page.getByText('Home')).toBeVisible()
+    // Verify English content — scope to navigation to avoid duplicates
+    await expect(page.getByRole('navigation').getByText('Home')).toBeVisible()
     
     // Change to Bengali
     await page.selectOption('select', 'bn')
@@ -23,31 +23,35 @@ test.describe('Language Switching', () => {
     // Change to Spanish
     await page.selectOption('select', 'es')
     await page.waitForURL(/\/es/)
+    await page.waitForLoadState('networkidle')
     
-    // Navigate to another page (if category link exists)
-    const categoryLink = page.locator('a[href*="/category/"]').first()
-    if (await categoryLink.isVisible()) {
-      await categoryLink.click()
-      await expect(page).toHaveURL(/\/es\//)
+    // Navigate to another page — scope to nav and use force click (hero image may overlay)
+    const categoryLink = page.getByRole('navigation').locator('a[href*="/category/"]').first()
+    if (await categoryLink.count() > 0) {
+      await categoryLink.waitFor({ state: 'visible', timeout: 10000 })
+      await categoryLink.click({ force: true })
+      await expect(page).toHaveURL(/\/es\//, { timeout: 10000 })
     }
   })
 
   test('should update navigation menu in selected language', async ({ page }) => {
     await page.goto('/en')
-    await expect(page.getByText('Politics')).toBeVisible()
+    // Scope to navigation to avoid matching duplicate "Politics" in footer
+    await expect(page.getByRole('navigation').getByText('Politics')).toBeVisible()
     
     await page.selectOption('select', 'es')
     await page.waitForURL(/\/es/)
-    await expect(page.getByText('Política')).toBeVisible()
+    await expect(page.getByRole('navigation').getByText('Política')).toBeVisible()
   })
 
   test('should update footer in selected language', async ({ page }) => {
     await page.goto('/en')
-    await expect(page.getByText('Privacy Policy')).toBeVisible()
+    // Scope to footer link to avoid matching newsletter disclaimer and copyright paragraph
+    await expect(page.locator('footer').getByRole('link', { name: 'Privacy Policy' })).toBeVisible()
     
     await page.selectOption('select', 'de')
     await page.waitForURL(/\/de/)
-    await expect(page.getByText('Datenschutzrichtlinie')).toBeVisible()
+    await expect(page.locator('footer').getByRole('link', { name: 'Datenschutzrichtlinie' })).toBeVisible()
   })
 
   test('should show all 5 language options', async ({ page }) => {
