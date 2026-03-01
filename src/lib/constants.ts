@@ -27,6 +27,7 @@ export const ORGANIZATION = {
 
 // NRB Europe Configuration
 export const categories = [
+  { name: 'Europe', slug: 'europe', color: 'bg-sky-100 text-sky-800' },
   { name: 'World', slug: 'world', color: 'bg-blue-100 text-blue-800' },
   { name: 'Politics', slug: 'politics', color: 'bg-red-100 text-red-800' },
   { name: 'Business', slug: 'business', color: 'bg-green-100 text-green-800' },
@@ -39,6 +40,7 @@ export const categories = [
   { name: 'Immigration', slug: 'immigration', color: 'bg-indigo-100 text-indigo-800' },
   { name: 'Jobs', slug: 'jobs', color: 'bg-green-100 text-green-800' },
   { name: 'Lifestyle', slug: 'lifestyle', color: 'bg-pink-100 text-pink-800' },
+  { name: 'Travel', slug: 'travel', color: 'bg-cyan-100 text-cyan-800' },
 ]
 
 export const regions = [

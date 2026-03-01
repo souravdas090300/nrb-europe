@@ -17,7 +17,7 @@ test.describe('Language Switching', () => {
     await expect(page).toHaveURL(/\/bn/)
   })
 
-  test('should maintain language preference across pages', async ({ page }) => {
+  test('should maintain language preference across pages', async ({ page, isMobile }) => {
     await page.goto('/en')
     
     // Change to Spanish
@@ -25,23 +25,52 @@ test.describe('Language Switching', () => {
     await page.waitForURL(/\/es/)
     await page.waitForLoadState('networkidle')
     
-    // Navigate to another page — scope to nav and use force click (hero image may overlay)
-    const categoryLink = page.getByRole('navigation').locator('a[href*="/category/"]').first()
-    if (await categoryLink.count() > 0) {
+    if (isMobile) {
+      // On mobile, open hamburger menu to access category links
+      await page.getByLabel('Menu').click()
+      const categoryLink = page.locator('a[href*="/category/"]:visible').first()
       await categoryLink.waitFor({ state: 'visible', timeout: 10000 })
       await categoryLink.click({ force: true })
-      await expect(page).toHaveURL(/\/es/, { timeout: 10000 })
+    } else {
+      // On desktop, category links are in the nav bar
+      const categoryLink = page.getByRole('navigation').locator('a[href*="/category/"]').first()
+      if (await categoryLink.count() > 0) {
+        await categoryLink.waitFor({ state: 'visible', timeout: 10000 })
+        await categoryLink.click({ force: true })
+      }
     }
+    await expect(page).toHaveURL(/\/es/, { timeout: 10000 })
   })
 
-  test('should update navigation menu in selected language', async ({ page }) => {
+  test('should update navigation menu in selected language', async ({ page, isMobile }) => {
     await page.goto('/en')
-    // Scope to navigation to avoid matching duplicate "Politics" in footer
-    await expect(page.getByRole('navigation').getByText('Politics')).toBeVisible()
-    
-    await page.selectOption('select', 'es')
-    await page.waitForURL(/\/es/)
-    await expect(page.getByRole('navigation').getByText('Política')).toBeVisible()
+    await page.waitForLoadState('networkidle')
+
+    if (isMobile) {
+      // On mobile, categories are inside the hamburger dropdown menu
+      const menuBtn = page.getByLabel('Menu')
+      await menuBtn.click()
+      const dropdown = page.getByTestId('hamburger-menu')
+      await dropdown.waitFor({ state: 'visible', timeout: 10000 })
+      await expect(dropdown.locator('a[href*="/category/politics"]')).toBeVisible()
+      await menuBtn.click() // close menu
+      await dropdown.waitFor({ state: 'hidden', timeout: 5000 })
+
+      await page.selectOption('select', 'es')
+      await page.waitForURL(/\/es/)
+      await page.waitForLoadState('networkidle')
+
+      await menuBtn.click()
+      await dropdown.waitFor({ state: 'visible', timeout: 10000 })
+      await expect(dropdown.locator('a[href*="/category/politics"]')).toContainText('Política')
+    } else {
+      // On desktop, categories are visible in the nav bar
+      await expect(page.getByRole('navigation').getByText('Politics')).toBeVisible()
+
+      await page.selectOption('select', 'es')
+      await page.waitForURL(/\/es/)
+      await expect(page.getByRole('navigation').getByText('Política')).toBeVisible()
+    }
   })
 
   test('should update footer in selected language', async ({ page }) => {

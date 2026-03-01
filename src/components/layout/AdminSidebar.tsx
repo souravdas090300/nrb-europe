@@ -1,62 +1,58 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { signOut } from 'next-auth/react'
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-md">
-        <div className="p-4 font-bold text-xl border-b">NRB Europe Admin</div>
-        <nav className="p-4">
-          <ul className="space-y-2">
-            <li>
-              <Link href="/admin" className="block p-2 hover:bg-gray-200 rounded transition">
-                📊 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/users" className="block p-2 hover:bg-gray-200 rounded transition">
-                👥 Users
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/subscriptions" className="block p-2 hover:bg-gray-200 rounded transition">
-                💳 Subscriptions
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/newsletter" className="block p-2 hover:bg-gray-200 rounded transition">
-                📧 Newsletter
-              </Link>
-            </li>
-            <li>
-              <Link href="/admin/settings" className="block p-2 hover:bg-gray-200 rounded transition">
-                ⚙️ Settings
-              </Link>
-            </li>
-            <li className="border-t pt-2 mt-2">
-              <Link href="/studio" className="block p-2 hover:bg-gray-200 rounded transition text-blue-600" target="_blank">
-                ✏️ Content Studio
-              </Link>
-            </li>
-            <li>
-              <button
-                onClick={() => signOut()}
-                className="block w-full text-left p-2 hover:bg-gray-200 rounded transition text-red-600"
-              >
-                🚪 Sign Out
-              </button>
-            </li>
-          </ul>
-        </nav>
-      </aside>
+const adminNav = [
+  { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/categories', label: 'Categories', icon: '📁' },
+  { href: '/admin/users', label: 'Users', icon: '👥' },
+  { href: '/admin/subscriptions', label: 'Subscriptions', icon: '💳' },
+  { href: '/admin/newsletter', label: 'Newsletter', icon: '📧' },
+  { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/admin/studio', label: 'Content Studio', icon: '✏️' },
+]
 
-      {/* Main content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
-      </main>
+export default function AdminSidebar({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+
+  return (
+    <div className="max-w-[1400px] mx-auto px-4 py-6">
+      {/* Admin navigation bar */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 overflow-x-auto">
+        <nav className="flex items-center gap-1 p-2">
+          {adminNav.map((item) => {
+            const isActive = item.href === '/admin'
+              ? pathname === '/admin' || pathname === '/admin/'
+              : pathname.startsWith(item.href)
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                  isActive
+                    ? 'bg-red-600 text-white'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span className="hidden sm:inline">{item.label}</span>
+              </Link>
+            )
+          })}
+          <div className="flex-1" />
+          <button
+            onClick={() => signOut()}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 whitespace-nowrap transition-colors"
+          >
+            🚪 <span className="hidden sm:inline">Sign Out</span>
+          </button>
+        </nav>
+      </div>
+
+      {/* Page content */}
+      {children}
     </div>
   )
 }

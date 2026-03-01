@@ -122,3 +122,22 @@ model NewsletterSubscriber {
   status    String   @default("active") // active, unsubscribed
   createdAt DateTime @default(now())
 }
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  color       String     @default("bg-gray-100 text-gray-800")
+  description String?
+  parentId    String?
+  parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryToCategory")
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId])
+  @@index([slug])
+  @@index([sortOrder])
+}

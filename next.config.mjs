@@ -1,5 +1,7 @@
 import { withSentryConfig } from '@sentry/nextjs'
 
+const isProduction = process.env.NODE_ENV === 'production'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   turbopack: {
@@ -49,16 +51,49 @@ const nextConfig = {
             value: 'nosniff'
           },
           {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
             key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin'
+            value: 'strict-origin-when-cross-origin'
           },
           {
             key: 'Content-Security-Policy',
-            value: "frame-ancestors 'self' https://*.vercel.app https://vercel.app"
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.sanity.io https://js.stripe.com https://*.vercel-scripts.com https://*.vercel-analytics.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "img-src 'self' data: blob: https://cdn.sanity.io https://images.unsplash.com https://*.googleusercontent.com",
+              "font-src 'self' https://fonts.gstatic.com",
+              "connect-src 'self' https://cdn.sanity.io https://*.sanity.io https://api.stripe.com https://*.sentry.io https://*.vercel-analytics.com",
+              "frame-src 'self' https://js.stripe.com https://*.vercel.app",
+              "frame-ancestors 'self' https://*.vercel.app",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              isProduction && "upgrade-insecure-requests",
+            ].filter(Boolean).join('; ')
           },
           {
             key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()'
+            value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+          },
+          {
+            key: 'X-Permitted-Cross-Domain-Policies',
+            value: 'none'
+          },
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: isProduction ? 'same-origin' : 'unsafe-none'
+          },
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin'
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none'
           }
         ],
       },

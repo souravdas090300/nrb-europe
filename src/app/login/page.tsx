@@ -5,18 +5,50 @@ import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import * as Sentry from '@sentry/nextjs'
+import NrbLogo from '@/components/ui/NrbLogo'
 
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [failedAttempts, setFailedAttempts] = useState(0)
+  const [lockedUntil, setLockedUntil] = useState<number | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
+  const oauthError = searchParams.get('error')
+
+  // Lockout countdown timer
+  const [lockoutSeconds, setLockoutSeconds] = useState(0)
+  useState(() => {
+    const interval = setInterval(() => {
+      if (lockedUntil) {
+        const remaining = Math.ceil((lockedUntil - Date.now()) / 1000)
+        if (remaining <= 0) {
+          setLockedUntil(null)
+          setLockoutSeconds(0)
+          setFailedAttempts(0)
+        } else {
+          setLockoutSeconds(remaining)
+        }
+      }
+    }, 1000)
+    return () => clearInterval(interval)
+  })
+
+  const isLocked = lockedUntil !== null && Date.now() < lockedUntil
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (isLocked) return
+
+    // Basic client-side validation
+    if (!email.trim() || !password) {
+      setError('Email and password are required')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -25,7 +57,7 @@ function LoginForm() {
         { op: 'auth', name: 'credentials-sign-in' },
         async () => {
           return await signIn('credentials', {
-            email,
+            email: email.trim().toLowerCase(),
             password,
             redirect: false,
           })
@@ -33,12 +65,35 @@ function LoginForm() {
       )
 
       if (res?.error) {
-        if (res.error.includes('verify your email')) {
+        const newAttempts = failedAttempts + 1
+        setFailedAttempts(newAttempts)
+
+        if (res.error.includes('Too many login attempts')) {
+          // Server-side lockout — parse seconds from error message
+          const match = res.error.match(/(\d+)\s*seconds/)
+          const seconds = match ? parseInt(match[1]) : 900
+          setLockedUntil(Date.now() + seconds * 1000)
+          setLockoutSeconds(seconds)
+          setError(`Account temporarily locked. Try again in ${Math.ceil(seconds / 60)} minutes.`)
+        } else if (res.error.includes('verify your email')) {
           setError('Please verify your email before signing in. Check your inbox.')
         } else {
-          setError('Invalid email or password')
+          // Show remaining attempts after 2 failures
+          if (newAttempts >= 2) {
+            const remaining = 5 - newAttempts
+            setError(`Invalid email or password. ${remaining > 0 ? `${remaining} attempts remaining.` : 'Account may be locked soon.'}`)
+          } else {
+            setError('Invalid email or password')
+          }
+
+          // Client-side lockout after 5 attempts
+          if (newAttempts >= 5) {
+            setLockedUntil(Date.now() + 15 * 60 * 1000) // 15 minutes
+            setLockoutSeconds(900)
+          }
         }
       } else if (res?.ok) {
+        setFailedAttempts(0)
         router.push('/admin')
       }
     } catch (err) {
@@ -50,13 +105,24 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <div className="mb-6">
+        <Link href="/">
+          <NrbLogo height={48} className="dark:invert" />
+        </Link>
+      </div>
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Sign In to NRB Europe</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Sign In</h1>
 
         {justRegistered && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
-            Account created successfully! Please sign in.
+            Account created successfully! Please check your email to verify, then sign in.
+          </div>
+        )}
+
+        {oauthError && !error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+            Google sign-in failed. Please try again or sign in with email.
           </div>
         )}
 
@@ -66,7 +132,13 @@ function LoginForm() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        {isLocked && (
+          <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4 text-sm">
+            🔒 Too many failed attempts. Try again in {Math.ceil(lockoutSeconds / 60)} min {lockoutSeconds % 60}s
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} autoComplete="on">
           <div className="mb-4">
             <label htmlFor="email" className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Email Address</label>
             <input
@@ -74,8 +146,11 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              spellCheck={false}
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
+              disabled={isLocked}
             />
           </div>
 
@@ -91,14 +166,16 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
+              disabled={isLocked}
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || isLocked}
             className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign In'}

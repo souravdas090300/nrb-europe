@@ -1,8 +1,23 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { strictLimiter } from '@/lib/security/rate-limit'
+import { validateLength } from '@/lib/security/sanitize'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Strict rate limit: 5 reset attempts per minute per IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const rateLimitResult = strictLimiter.check(ip)
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)) },
+      }
+    )
+  }
+
   try {
     const { token, password } = await request.json()
 
@@ -13,9 +28,28 @@ export async function POST(request: Request) {
       )
     }
 
-    if (password.length < 6) {
+    if (!validateLength(password, 8, 128)) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
+        { error: 'Password must be between 8 and 128 characters' },
+        { status: 400 }
+      )
+    }
+
+    // Password strength check
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /\d/.test(password)
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
+      return NextResponse.json(
+        { error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' },
+        { status: 400 }
+      )
+    }
+
+    // Validate token format (should be hex string)
+    if (!/^[a-f0-9]{64}$/.test(token)) {
+      return NextResponse.json(
+        { error: 'Invalid reset link' },
         { status: 400 }
       )
     }
@@ -42,7 +76,8 @@ export async function POST(request: Request) {
 
     const email = verificationToken.identifier.replace('reset:', '')
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Hash with higher cost factor (12 rounds)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     await prisma.user.update({
       where: { email },

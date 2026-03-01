@@ -1,15 +1,31 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 import { sendPasswordResetEmail } from '@/lib/email'
+import { strictLimiter } from '@/lib/security/rate-limit'
+import { sanitizeEmail } from '@/lib/security/sanitize'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Strict rate limit: 5 reset requests per minute per IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const rateLimitResult = strictLimiter.check(ip)
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)) },
+      }
+    )
+  }
+
   try {
-    const { email } = await request.json()
+    const body = await request.json()
+    const email = sanitizeEmail(body.email || '')
 
     if (!email) {
       return NextResponse.json(
-        { error: 'Email is required' },
+        { error: 'Valid email is required' },
         { status: 400 }
       )
     }
@@ -39,6 +55,9 @@ export async function POST(request: Request) {
 
       await sendPasswordResetEmail(email, user.name || '', token)
     }
+
+    // Artificial delay to prevent timing-based email enumeration
+    await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 500))
 
     return NextResponse.json(
       { message: 'If an account with that email exists, a password reset link has been sent.' },

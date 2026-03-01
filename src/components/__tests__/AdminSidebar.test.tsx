@@ -17,10 +17,15 @@ jest.mock('next/link', () => {
   )
 })
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  usePathname: () => '/admin',
+}))
+
 describe('AdminSidebar', () => {
-  it('renders the admin title', () => {
+  it('renders the admin navigation', () => {
     render(<AdminSidebar><div>Content</div></AdminSidebar>)
-    expect(screen.getByText('NRB Europe Admin')).toBeInTheDocument()
+    expect(screen.getByText(/Dashboard/)).toBeInTheDocument()
   })
 
   it('renders all navigation links', () => {
@@ -49,7 +54,7 @@ describe('AdminSidebar', () => {
     expect(settingsLink).toHaveAttribute('href', '/admin/settings')
 
     const studioLink = screen.getByText(/Content Studio/).closest('a')
-    expect(studioLink).toHaveAttribute('href', '/studio')
+    expect(studioLink).toHaveAttribute('href', '/admin/studio')
   })
 
   it('has a sign out button', () => {

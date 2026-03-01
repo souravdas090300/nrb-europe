@@ -49,17 +49,17 @@ export default function Dashboard() {
   return (
     <>
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {session?.user?.name}</p>
+        <h1 className="text-3xl font-bold dark:text-white">Dashboard</h1>
+        <p className="text-gray-600 dark:text-gray-400">Welcome back, {session?.user?.name}</p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Users</p>
-              <p className="text-3xl font-bold">{analytics?.totalUsers ?? 0}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Total Users</p>
+              <p className="text-3xl font-bold dark:text-white">{analytics?.totalUsers ?? 0}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <span className="text-2xl">👥</span>
@@ -67,11 +67,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Active Subscriptions</p>
-              <p className="text-3xl font-bold">{analytics?.activeSubscriptions ?? 0}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Active Subscriptions</p>
+              <p className="text-3xl font-bold dark:text-white">{analytics?.activeSubscriptions ?? 0}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
               <span className="text-2xl">💳</span>
@@ -79,11 +79,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Revenue (6m)</p>
-              <p className="text-3xl font-bold">${analytics?.totalRevenue ?? 0}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Revenue (6m)</p>
+              <p className="text-3xl font-bold dark:text-white">${analytics?.totalRevenue ?? 0}</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
               <span className="text-2xl">💰</span>
@@ -91,11 +91,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Newsletter Subs</p>
-              <p className="text-3xl font-bold">{analytics?.newsletterSubs ?? 0}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Newsletter Subs</p>
+              <p className="text-3xl font-bold dark:text-white">{analytics?.newsletterSubs ?? 0}</p>
             </div>
             <div className="bg-orange-100 p-3 rounded-full">
               <span className="text-2xl">📧</span>

@@ -17,7 +17,7 @@ import {customDocumentActions} from './src/sanity/admin/plugins/workflow-actions
 export default defineConfig({
   name: 'nrb-europe-admin',
   title: 'NRB Europe - Editorial System',
-  basePath: '/studio',
+  basePath: '/admin/studio',
   projectId,
   dataset,
   // Add and edit the content schema in the './sanity/schemaTypes' folder

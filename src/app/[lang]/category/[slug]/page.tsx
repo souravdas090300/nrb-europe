@@ -1,10 +1,10 @@
 import { urlFor } from '@/lib/sanity/client'
-import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
+import { categories } from '@/lib/constants'
 import {
   generateCategoryStaticParams,
   generateCategoryMetadata,
@@ -12,9 +12,20 @@ import {
   getCategoryBySlug,
 } from '@/lib/sanity/category'
 
-// Generate static params
+// Generate static params — include all known categories, not just Sanity ones
 export async function generateStaticParams() {
-  return generateCategoryStaticParams()
+  const sanityParams = await generateCategoryStaticParams()
+  const constantSlugs = categories.map((c) => ({ slug: c.slug }))
+  // Merge: use Set to deduplicate
+  const seen = new Set<string>()
+  const merged = []
+  for (const p of [...sanityParams, ...constantSlugs]) {
+    if (!seen.has(p.slug)) {
+      seen.add(p.slug)
+      merged.push(p)
+    }
+  }
+  return merged
 }
 
 // Generate metadata
@@ -27,12 +38,18 @@ export const revalidate = 60 // Revalidate every minute
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string, lang: Locale }> }) {
   const { slug, lang } = await params
-  const [category, dictionary] = await Promise.all([
+  const [sanityCategory, dictionary] = await Promise.all([
     getCategoryBySlug(slug),
     getDictionary(lang),
   ])
-  
+
+  // Fallback to constants if the category doesn't exist in Sanity yet
+  const knownCategory = categories.find((c) => c.slug === slug)
+  const category = sanityCategory || (knownCategory ? { title: knownCategory.name, description: null } : null)
+
   if (!category) {
+    // Truly unknown category — not in Sanity or constants
+    const { notFound } = await import('next/navigation')
     notFound()
   }
 

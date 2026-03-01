@@ -11,7 +11,7 @@ import { categories } from '@/lib/constants'
 import NrbLogo from '../ui/NrbLogo'
 
 // Items that go inside the hamburger menu
-const HAMBURGER_SLUGS = new Set(['jobs'])
+const HAMBURGER_SLUGS = new Set(['jobs', 'travel'])
 
 const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -86,11 +86,12 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
             {dictionary?.nav?.home || 'Home'}
           </Link>
 
+          {/* Categories hidden on mobile, visible on md+ */}
           {navCategories.map((cat) => (
             <Link
               key={cat.slug}
               href={`/${lang}/category/${cat.slug}`}
-              className={linkClass}
+              className={`${linkClass} hidden md:inline`}
             >
               {getCatLabel(cat)}
             </Link>
@@ -156,7 +157,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                     <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
                       Dashboard
                     </Link>
-                    <Link href="/studio" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
+                    <Link href="/admin/studio" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
                       Content Studio
                     </Link>
                   </>
@@ -195,20 +196,12 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
       {/* Hamburger dropdown */}
       {menuOpen && (
         <div
+          data-testid="hamburger-menu"
           className={`border-t px-4 py-3 ${
             theme === 'dark' ? 'border-gray-700 bg-gray-900' : 'border-gray-200 bg-white'
           }`}
         >
           <div className="flex flex-col gap-2 max-w-[1400px] mx-auto">
-            <Link
-              href="/studio"
-              onClick={() => setMenuOpen(false)}
-              className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-              }`}
-            >
-              <Play size={14} /> Studio
-            </Link>
             {session ? (
               <>
                 <Link
@@ -230,7 +223,8 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                 </button>
               </>
             ) : null}
-            {hamburgerCategories.map((cat) => (
+            {/* All categories in hamburger menu */}
+            {categories.map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/${lang}/category/${cat.slug}`}
@@ -239,7 +233,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
                 }`}
               >
-                <Briefcase size={14} /> {getCatLabel(cat)}
+                {getCatLabel(cat)}
               </Link>
             ))}
             <Link

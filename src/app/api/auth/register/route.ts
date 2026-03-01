@@ -1,24 +1,59 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import * as Sentry from '@sentry/nextjs'
 import { sendVerificationEmail } from '@/lib/email'
+import { authLimiter } from '@/lib/security/rate-limit'
+import { sanitizeString, sanitizeEmail, validateLength } from '@/lib/security/sanitize'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limit: 10 registration attempts per 15 minutes per IP
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+  const rateLimitResult = authLimiter.check(ip)
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many registration attempts. Please try again later.' },
+      {
+        status: 429,
+        headers: { 'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)) },
+      }
+    )
+  }
+
   try {
-    const { email, name, password } = await request.json()
+    const body = await request.json()
+    const rawEmail = body.email
+    const rawName = body.name
+    const rawPassword = body.password
 
-    if (!email || !password || !name) {
+    // Sanitize inputs
+    const email = sanitizeEmail(rawEmail)
+    const name = sanitizeString(rawName || '')
+    const password = rawPassword // Don't sanitize passwords — they can contain special chars
+
+    if (!email) {
+      return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
+    }
+
+    if (!name || !validateLength(name, 1, 100)) {
+      return NextResponse.json({ error: 'Name is required (max 100 characters)' }, { status: 400 })
+    }
+
+    if (!password || !validateLength(password, 8, 128)) {
       return NextResponse.json(
-        { error: 'Name, email and password are required' },
+        { error: 'Password must be between 8 and 128 characters' },
         { status: 400 }
       )
     }
 
-    if (password.length < 6) {
+    // Password strength check
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /\d/.test(password)
+    if (!hasUpperCase || !hasLowerCase || !hasNumber) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters' },
+        { error: 'Password must contain at least one uppercase letter, one lowercase letter, and one number' },
         { status: 400 }
       )
     }
@@ -28,13 +63,15 @@ export async function POST(request: Request) {
     })
 
     if (existingUser) {
+      // Don't reveal whether email exists — use generic message
       return NextResponse.json(
-        { error: 'An account with this email already exists' },
+        { error: 'Unable to create account. If you already have an account, try signing in.' },
         { status: 409 }
       )
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10)
+    // Hash with higher cost factor (12 rounds)
+    const hashedPassword = await bcrypt.hash(password, 12)
 
     const user = await prisma.user.create({
       data: {

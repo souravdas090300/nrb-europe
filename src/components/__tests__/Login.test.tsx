@@ -34,7 +34,9 @@ describe('Login Page', () => {
 
   it('renders the login form', () => {
     render(<Login />)
-    expect(screen.getByText('Sign In to NRB Europe')).toBeInTheDocument()
+    expect(screen.getByText((content, element) => {
+      return element !== null && /Sign In/i.test(content) && element.tagName === 'H1'
+    })).toBeInTheDocument()
     expect(screen.getByLabelText('Email Address')).toBeInTheDocument()
     expect(screen.getByLabelText('Password')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
