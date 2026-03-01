@@ -26,7 +26,7 @@ const rangeToDays: Record<string, number> = {
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
-    if (!session?.user || !['admin', 'editor'].includes(session.user.role)) {
+    if (!session?.user || !['admin', 'editor'].includes(session.user.role ?? '')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
