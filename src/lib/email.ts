@@ -9,6 +9,8 @@ function getResend() {
   return _resend
 }
 
+const FROM_EMAIL = process.env.EMAIL_FROM || 'NRB Europe <onboarding@resend.dev>'
+
 export const sendEmail = async ({
   to,
   subject,
@@ -19,14 +21,19 @@ export const sendEmail = async ({
   html: string
 }) => {
   try {
-    await getResend().emails.send({
-      from: 'NRB Europe <newsletter@nrbeurope.com>',
+    const result = await getResend().emails.send({
+      from: FROM_EMAIL,
       to,
       subject,
       html,
     })
+    if (result.error) {
+      console.error('Email sending failed:', result.error)
+      throw new Error(`Email sending failed: ${result.error.message}`)
+    }
   } catch (error) {
     console.error('Email sending failed:', error)
+    throw error
   }
 }
 

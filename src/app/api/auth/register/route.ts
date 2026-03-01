@@ -95,7 +95,16 @@ export async function POST(request: NextRequest) {
     })
 
     // Send verification email
-    await sendVerificationEmail(email, name, verificationToken)
+    try {
+      await sendVerificationEmail(email, name, verificationToken)
+    } catch (emailError) {
+      console.error('Failed to send verification email:', emailError)
+      // User was created but email failed — inform them
+      return NextResponse.json(
+        { message: 'Account created but we could not send the verification email. Please contact support or try again later.', userId: user.id },
+        { status: 201 }
+      )
+    }
 
     return NextResponse.json(
       { message: 'Account created. Please check your email to verify your account.', userId: user.id },
