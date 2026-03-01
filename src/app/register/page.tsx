@@ -12,12 +12,14 @@ export default function Register() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSuccess('')
 
     if (password !== confirmPassword) {
       setError('Passwords do not match')
@@ -48,7 +50,7 @@ export default function Register() {
       if (!res.ok) {
         setError(data.error || 'Failed to create account')
       } else {
-        router.push('/login?registered=true')
+        setSuccess(data.message || 'Account created! Check your email to verify your account.')
       }
     } catch (err) {
       Sentry.captureException(err)

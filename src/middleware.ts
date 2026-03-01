@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   const isStaticAsset = /\.[^/]+$/.test(pathname)
-  const isSystemPath = pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/studio') || pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/subscribe')
+  const isSystemPath = pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/studio') || pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/verify') || pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password') || pathname.startsWith('/profile') || pathname.startsWith('/subscribe')
 
   if (isStaticAsset || isSystemPath) {
     return NextResponse.next()
@@ -46,5 +46,5 @@ function getLocale(request: NextRequest): string {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.json|robots.txt|sw.js|studio|admin|login|register|subscribe).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.json|robots.txt|sw.js|studio|admin|login|register|verify|forgot-password|reset-password|profile|subscribe).*)'],
 }

@@ -90,23 +90,27 @@ export async function POST(request: Request) {
       const invoice = event.data.object as any
 
       if (invoice.payment_intent) {
-        await prisma.payment.create({
-          data: {
-            userId:
-              (
-                await prisma.subscription.findFirst({
-                  where: {
-                    stripeSubscriptionId: invoice.subscription as string,
-                  },
-                })
-              )?.userId || '',
-            stripePaymentIntentId: invoice.payment_intent as string,
-            amount: invoice.amount_paid,
-            currency: invoice.currency,
-            status: 'succeeded',
-            description: `Invoice ${invoice.number}`,
+        const subscription = await prisma.subscription.findFirst({
+          where: {
+            stripeSubscriptionId: invoice.subscription as string,
           },
         })
+
+        if (subscription?.userId) {
+          await prisma.payment.create({
+            data: {
+              userId: subscription.userId,
+              stripePaymentIntentId: invoice.payment_intent as string,
+              amount: invoice.amount_paid,
+              currency: invoice.currency,
+              status: 'succeeded',
+              description: `Invoice ${invoice.number}`,
+            },
+          })
+        } else {
+          console.error('No subscription found for invoice:', invoice.id)
+          Sentry.captureMessage(`Payment without matching subscription: ${invoice.id}`)
+        }
       }
       break
     }

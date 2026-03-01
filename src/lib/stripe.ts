@@ -5,8 +5,11 @@ let _stripe: Stripe | null = null
 
 export function getStripe() {
   if (!_stripe) {
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: '2023-10-16' as any,
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not configured')
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2026-02-25.clover',
     })
   }
   return _stripe
@@ -41,7 +44,7 @@ export const getStripeCustomer = async (userId: string, email: string) => {
     return user.stripeCustomerId
   }
 
-  const customer = await stripe.customers.create({
+  const customer = await getStripe().customers.create({
     email,
     metadata: { userId },
   })

@@ -88,16 +88,27 @@ export async function invalidateCache(...keys: string[]): Promise<void> {
 
 /**
  * Invalidate all keys matching a pattern (e.g. "search:*").
+ * Uses SCAN instead of KEYS to avoid blocking Redis in production.
  */
 export async function invalidateCachePattern(pattern: string): Promise<void> {
   const client = getRedis()
   if (!client) return
 
   try {
-    const keys = await client.keys(pattern)
-    if (keys.length > 0) {
-      await client.del(...keys)
-    }
+    let cursor = '0'
+    do {
+      const [nextCursor, keys] = await client.scan(
+        cursor,
+        'MATCH',
+        pattern,
+        'COUNT',
+        100,
+      )
+      cursor = nextCursor
+      if (keys.length > 0) {
+        await client.del(...keys)
+      }
+    } while (cursor !== '0')
   } catch {
     // Non-blocking
   }

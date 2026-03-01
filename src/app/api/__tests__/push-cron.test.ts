@@ -65,7 +65,26 @@ jest.mock('@/lib/sanity/client', () => ({
   },
 }))
 
+jest.mock('@sentry/nextjs', () => ({
+  startSpan: (_opts: unknown, fn: (span: unknown) => unknown) =>
+    fn({ setAttribute: jest.fn() }),
+  captureException: jest.fn(),
+  logger: {
+    error: jest.fn(),
+    fmt: (strings: TemplateStringsArray, ...values: unknown[]) =>
+      strings.reduce((acc, str, i) => acc + str + (values[i] ?? ''), ''),
+  },
+}))
+
+import { NextRequest } from 'next/server'
 import { GET as cronGET } from '../cron/publish-scheduled/route'
+
+function createCronRequest() {
+  return new NextRequest(
+    new URL('/api/cron/publish-scheduled', 'http://localhost:3000'),
+    { headers: { authorization: `Bearer ${process.env.CRON_SECRET}` } },
+  )
+}
 
 describe('GET /api/cron/publish-scheduled', () => {
   beforeEach(() => {
@@ -78,7 +97,7 @@ describe('GET /api/cron/publish-scheduled', () => {
   it('returns zero count when no posts are scheduled', async () => {
     mockSanityFetch.mockResolvedValueOnce([])
 
-    const res = await cronGET()
+    const res = await cronGET(createCronRequest())
     expect(res.status).toBe(200)
     const data = (await parseJson(res)) as Record<string, unknown>
     expect(data).toEqual({
@@ -94,7 +113,7 @@ describe('GET /api/cron/publish-scheduled', () => {
     ]
     mockSanityFetch.mockResolvedValueOnce(scheduled)
 
-    const res = await cronGET()
+    const res = await cronGET(createCronRequest())
     expect(res.status).toBe(200)
     const data = (await parseJson(res)) as Record<string, unknown>
     expect(data).toHaveProperty('count', 2)
@@ -105,7 +124,7 @@ describe('GET /api/cron/publish-scheduled', () => {
   it('returns 500 on Sanity error', async () => {
     mockSanityFetch.mockRejectedValueOnce(new Error('Sanity unavailable'))
 
-    const res = await cronGET()
+    const res = await cronGET(createCronRequest())
     expect(res.status).toBe(500)
   })
 })

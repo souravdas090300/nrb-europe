@@ -16,6 +16,20 @@ jest.mock('@/lib/sanity/client', () => ({
   client: { fetch: (...args: unknown[]) => mockFetch(...args) },
 }))
 
+jest.mock('@/lib/redis', () => ({
+  cached: (_key: string, fetcher: () => Promise<unknown>) => fetcher(),
+}))
+
+jest.mock('next-auth', () => ({
+  getServerSession: jest.fn().mockResolvedValue({
+    user: { email: 'admin@test.com', name: 'Admin', role: 'admin' },
+  }),
+}))
+
+jest.mock('@/lib/auth', () => ({
+  authOptions: {},
+}))
+
 import { GET } from '../admin/stats/route'
 
 describe('GET /api/admin/stats', () => {
@@ -31,7 +45,7 @@ describe('GET /api/admin/stats', () => {
       .mockResolvedValueOnce([{ name: 'Germany' }, { name: 'Germany' }, { name: 'France' }])
 
     const req = createGetRequest('/api/admin/stats')
-    const res = await GET(req)
+    const res = await GET(req as any)
 
     expect(res.status).toBe(200)
     const data = (await parseJson(res)) as Record<string, unknown>

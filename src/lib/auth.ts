@@ -30,6 +30,11 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password)
         if (!isValid) return null
 
+        // Check if email is verified
+        if (!user.emailVerified) {
+          throw new Error('Please verify your email before signing in. Check your inbox.')
+        }
+
         return {
           id: user.id,
           email: user.email,

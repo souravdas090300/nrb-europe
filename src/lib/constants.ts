@@ -1,4 +1,4 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nrb-europe.vercel.app'
+export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://nrbeurope.com'
 export const SITE_NAME = 'NRB Europe'
 export const SITE_DESCRIPTION = 'Breaking news, immigration updates, and community stories for Non-Resident Bangladeshis across Europe'
 export const TWITTER_HANDLE = '@NRBEurope'

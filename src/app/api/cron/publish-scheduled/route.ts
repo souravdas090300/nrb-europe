@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { client } from '@/lib/sanity/client'
 import * as Sentry from '@sentry/nextjs'
 
@@ -6,7 +6,13 @@ const { logger } = Sentry
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Verify cron secret to prevent unauthorized access
+  const authHeader = request.headers.get('authorization')
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   return Sentry.startSpan(
     { op: 'cron', name: 'publish-scheduled-posts' },
     async (span) => {

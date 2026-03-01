@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { articleId, type } = body;
     
-    // Fetch article details from Sanity
+    // Fetch article details from Sanity using parameterized query
     const sanityResponse = await fetch(
-      `https://${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/production?query=*[_id == "${articleId}"][0]{title,excerpt,slug,mainImage,author->{name}}`,
+      `https://${process.env.NEXT_PUBLIC_SANITY_PROJECT_ID}.api.sanity.io/v2024-01-01/data/query/production?query=${encodeURIComponent('*[_id == $id][0]{title,excerpt,slug,mainImage,author->{name}}')}&$id="${encodeURIComponent(articleId)}"`,
       {
         headers: {
           'Authorization': `Bearer ${process.env.SANITY_API_TOKEN}`,

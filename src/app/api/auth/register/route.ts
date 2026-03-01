@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 import * as Sentry from '@sentry/nextjs'
+import { sendVerificationEmail } from '@/lib/email'
 
 export async function POST(request: Request) {
   try {
@@ -43,8 +45,23 @@ export async function POST(request: Request) {
       },
     })
 
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+
+    await prisma.verificationToken.create({
+      data: {
+        identifier: email,
+        token: verificationToken,
+        expires,
+      },
+    })
+
+    // Send verification email
+    await sendVerificationEmail(email, name, verificationToken)
+
     return NextResponse.json(
-      { message: 'Account created successfully', userId: user.id },
+      { message: 'Account created. Please check your email to verify your account.', userId: user.id },
       { status: 201 }
     )
   } catch (error) {

@@ -33,7 +33,11 @@ function LoginForm() {
       )
 
       if (res?.error) {
-        setError('Invalid email or password')
+        if (res.error.includes('verify your email')) {
+          setError('Please verify your email before signing in. Check your inbox.')
+        } else {
+          setError('Invalid email or password')
+        }
       } else if (res?.ok) {
         router.push('/admin')
       }
@@ -76,7 +80,12 @@ function LoginForm() {
           </div>
 
           <div className="mb-6">
-            <label htmlFor="password" className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Password</label>
+            <div className="flex items-center justify-between mb-2">
+              <label htmlFor="password" className="block text-gray-700 dark:text-gray-300 text-sm font-bold">Password</label>
+              <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                Forgot password?
+              </Link>
+            </div>
             <input
               id="password"
               type="password"

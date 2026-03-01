@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { client } from '@/lib/sanity/client'
 import { cached } from '@/lib/redis'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 
 type DashboardStats = {
   totalViews: number
@@ -23,6 +25,11 @@ const rangeToDays: Record<string, number> = {
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions)
+    if (!session?.user || !['admin', 'editor'].includes(session.user.role)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const searchParams = request.nextUrl.searchParams
     const range = searchParams.get('range') || '7d'
 
