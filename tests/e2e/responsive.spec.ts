@@ -21,7 +21,7 @@ test.describe('Responsive Design', () => {
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto('/en')
     
-    const navigation = page.getByRole('navigation')
+    const navigation = page.getByRole('navigation').first()
     await expect(navigation).toBeVisible()
   })
 

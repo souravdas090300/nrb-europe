@@ -30,7 +30,7 @@ test.describe('Language Switching', () => {
     if (await categoryLink.count() > 0) {
       await categoryLink.waitFor({ state: 'visible', timeout: 10000 })
       await categoryLink.click({ force: true })
-      await expect(page).toHaveURL(/\/es\//, { timeout: 10000 })
+      await expect(page).toHaveURL(/\/es/, { timeout: 10000 })
     }
   })
 

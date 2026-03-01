@@ -14,7 +14,7 @@ test.describe('Homepage', () => {
 
   test('should display navigation menu', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('navigation')).toBeVisible()
+    await expect(page.getByRole('navigation').first()).toBeVisible()
   })
 
   test('should have language switcher', async ({ page }) => {
