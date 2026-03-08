@@ -1,3 +1,18 @@
+/**
+ * @file SEO.tsx — Reusable metadata generator for pages
+ *
+ * Builds a Next.js `Metadata` object with Open Graph, Twitter Card,
+ * canonical URL, article dates, and JSON-LD structured data.
+ * Used by page-level `generateMetadata()` functions.
+ *
+ * @example
+ * ```ts
+ * export function generateMetadata() {
+ *   return generateSEO({ title: 'About', description: '...' })
+ * }
+ * ```
+ */
+
 import type { Metadata } from 'next'
 
 interface SEOProps {

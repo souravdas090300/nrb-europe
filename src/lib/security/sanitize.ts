@@ -1,5 +1,15 @@
 /**
- * Input Sanitization — XSS prevention and input validation utilities
+ * @file sanitize.ts — Input sanitization & XSS / injection prevention
+ *
+ * Pure functions for cleansing user input before storage or rendering.
+ * No side-effects, no I/O — safe to call anywhere.
+ *
+ * Categories:
+ *  - **HTML**: `stripHtml`, `escapeHtml`
+ *  - **Strings**: `sanitizeString`, `sanitizeEmail`, `sanitizeSlug`, `validateLength`
+ *  - **Objects**: `sanitizeBody` (recursive, strips HTML from all string fields)
+ *  - **Injection detection**: `hasSqlInjection`, `hasNoSqlInjection`
+ *  - **URL validation**: `isSafeUrl`
  */
 
 /** Strip HTML tags from a string */

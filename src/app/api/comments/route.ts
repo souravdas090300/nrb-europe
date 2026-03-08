@@ -1,10 +1,25 @@
+/**
+ * @file /api/comments — Article comment CRUD
+ *
+ * GET  /api/comments?articleId=xxx — Fetch approved top-level comments
+ *      with their nested replies. Results are cached in Redis (60s TTL).
+ *
+ * POST /api/comments — Create a new comment or reply.
+ *      Requires authentication. Comments from admin/editor roles are
+ *      auto-approved; all others start as "pending" (moderation queue).
+ *      Invalidates the Redis cache for the article on mutation.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { cached, invalidateCache } from '@/lib/redis'
 
-// GET /api/comments?articleId=xxx
+/**
+ * Fetch all approved top-level comments for an article, with replies.
+ * Uses Redis cache-aside pattern with a 60-second TTL.
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -44,7 +59,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/comments
+/**
+ * Create a new comment or reply on an article.
+ * Requires an authenticated session. Auto-approves for admin/editor roles.
+ */
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)

@@ -1,3 +1,21 @@
+/**
+ * @file POST /api/auth/register — User registration endpoint
+ *
+ * Flow:
+ *  1. Rate-limit check (10 attempts / 15 min per IP)
+ *  2. Input sanitisation & validation (email, name, password strength)
+ *  3. Check for existing user (generic error to prevent email enumeration)
+ *  4. Hash password with bcrypt (12 rounds)
+ *  5. Create User record in PostgreSQL
+ *  6. Generate 32-byte verification token (24h expiry)
+ *  7. Send verification email via Resend
+ *
+ * If the email send fails, the user is still created and a 201 is returned
+ * with an informative message so the user can request a new verification.
+ *
+ * @security Rate-limited via `authLimiter`, input sanitised via `sanitizeEmail`/`sanitizeString`
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'

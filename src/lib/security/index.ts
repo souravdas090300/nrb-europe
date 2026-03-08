@@ -1,5 +1,12 @@
 /**
- * Security Module — Central export for all security utilities
+ * @file security/index.ts — Barrel export for the security module
+ *
+ * Import everything from `@/lib/security` instead of individual files.
+ *
+ * @example
+ * ```ts
+ * import { withSecurity, sanitizeEmail, authLimiter } from '@/lib/security'
+ * ```
  */
 
 export { rateLimit, apiLimiter, authLimiter, searchLimiter, adminLimiter, webhookLimiter, strictLimiter } from './rate-limit'

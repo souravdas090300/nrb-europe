@@ -1,8 +1,30 @@
+/**
+ * @file middleware.ts — Next.js Edge Middleware (runs on every matched request)
+ *
+ * Two responsibilities executed in order:
+ *
+ * 1. **Security layer** — Blocks known-bad user-agents (security scanners),
+ *    suspicious paths (WordPress probes, path traversal, SQL injection),
+ *    long URIs (buffer overflow), and null-byte injections. Adds a unique
+ *    `X-Request-Id` header for distributed tracing.
+ *
+ * 2. **i18n routing** — If the URL is missing a locale prefix (e.g. `/about`
+ *    instead of `/en/about`), redirects to the best-matching locale based on
+ *    the `NEXT_LOCALE` cookie, `Accept-Language` header, or the fallback (`en`).
+ *    Static assets and system paths (API, auth, admin) are excluded.
+ *
+ * @see {@link src/lib/i18n-config.ts} for supported locales
+ * @see {@link next.config.mjs} for additional rewrites/redirects
+ */
+
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { i18n } from './lib/i18n-config'
 
-// Blocked user-agent patterns (bots, scanners, scrapers)
+/**
+ * User-agent patterns associated with automated security scanners and
+ * aggressive SEO crawlers. Matched requests are immediately rejected (403).
+ */
 const BLOCKED_USER_AGENTS = [
   /sqlmap/i,
   /nikto/i,
@@ -17,7 +39,11 @@ const BLOCKED_USER_AGENTS = [
   /blexbot/i,
 ]
 
-// Suspicious path patterns (common attack vectors)
+/**
+ * Path patterns that indicate attack probes (WordPress, phpMyAdmin,
+ * directory traversal, SQL injection via URL). Matched requests return 404
+ * to avoid revealing the tech stack.
+ */
 const BLOCKED_PATHS = [
   /\.\.\//, // path traversal
   /\/wp-admin/i,
@@ -68,7 +94,9 @@ export function middleware(request: NextRequest) {
   const requestId = crypto.randomUUID()
   response.headers.set('X-Request-Id', requestId)
 
-  // --- I18N ROUTING ---
+  // --- I18N ROUTING LAYER ---
+  // Skip locale prefix logic for static assets and system paths
+  // (API routes, auth pages, admin panel, etc.)
 
   const isStaticAsset = /\.[^/]+$/.test(pathname)
   const isSystemPath = pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.startsWith('/admin') || pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/verify') || pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password') || pathname.startsWith('/profile') || pathname.startsWith('/subscribe')
@@ -93,6 +121,10 @@ export function middleware(request: NextRequest) {
   return response
 }
 
+/**
+ * Detect the user’s preferred locale.
+ * Priority: NEXT_LOCALE cookie > Accept-Language header > default (en).
+ */
 function getLocale(request: NextRequest): string {
   // Check for locale in cookie
   const localeCookie = request.cookies.get('NEXT_LOCALE')?.value
@@ -112,6 +144,11 @@ function getLocale(request: NextRequest): string {
   return i18n.defaultLocale
 }
 
+/**
+ * Matcher config: run middleware on all routes EXCEPT static files,
+ * API routes, auth pages, admin panel, and other system paths.
+ * These exclusions mirror `isSystemPath` above for consistency.
+ */
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.json|robots.txt|sw.js|admin|login|register|verify|forgot-password|reset-password|profile|subscribe).*)'],
 }

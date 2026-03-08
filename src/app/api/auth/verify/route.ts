@@ -1,3 +1,13 @@
+/**
+ * @file GET /api/auth/verify?token=xxx — Email verification endpoint
+ *
+ * Called when a user clicks the verification link in their email.
+ * Validates the token, checks expiry (24h), sets `emailVerified` on the
+ * User record, and deletes the consumed token.
+ *
+ * Expired tokens are cleaned up on access. Invalid tokens return 400.
+ */
+
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import * as Sentry from '@sentry/nextjs'

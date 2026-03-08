@@ -1,3 +1,21 @@
+/**
+ * @file auth.ts — NextAuth v4 configuration for NRB Europe
+ *
+ * Authentication strategy: JWT (stateless sessions stored in cookies).
+ *
+ * Providers:
+ *  1. **Google OAuth** — social sign-in, auto-creates user via PrismaAdapter.
+ *  2. **Credentials** — email + password login with brute-force protection,
+ *     progressive delays, and email-verification enforcement.
+ *
+ * Callbacks extend the default JWT/session objects with `id` and `role` so
+ * they are available on the client via `useSession()` and on the server via
+ * `getServerSession(authOptions)`.
+ *
+ * @see {@link src/lib/security/brute-force.ts} for lockout logic
+ * @see {@link src/types/next-auth.d.ts} for augmented Session/JWT types
+ */
+
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
@@ -6,6 +24,11 @@ import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 import { checkBruteForce, recordFailedAttempt, recordSuccessfulLogin } from './security/brute-force'
 
+/**
+ * Central NextAuth configuration object.
+ * Imported by API route `/api/auth/[...nextauth]` and by any server-side
+ * code that calls `getServerSession(authOptions)`.
+ */
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -13,6 +36,9 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID ?? '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
     }),
+    // --- Credentials provider (email + password) ---
+    // Includes brute-force protection: progressive delays after 3 failures,
+    // account lockout after 5 failures per email or 20 per IP.
     CredentialsProvider({
       name: 'credentials',
       credentials: {
@@ -70,7 +96,10 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  // --- Callbacks ---
+  // Extend the default JWT and Session objects with custom fields (`id`, `role`).
   callbacks: {
+    /** Persist user `id` and `role` into the JWT on first sign-in. */
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
@@ -84,6 +113,7 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
+    /** Expose `id` and `role` from the JWT to the client-side session. */
     async session({ session, token }) {
       if (session.user) {
         session.user.role = token.role as string

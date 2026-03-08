@@ -1,3 +1,20 @@
+/**
+ * @file app/[lang]/layout.tsx — Locale-specific layout
+ *
+ * Wraps all pages under `/{locale}/...`. Provides:
+ *  - Theme provider (dark/light mode)
+ *  - Site header with nav, search, auth, and language switcher
+ *  - Breaking news ticker
+ *  - Footer with social links
+ *  - Google Analytics
+ *  - PWA service worker registration & install prompt
+ *  - Organization JSON-LD structured data
+ *  - i18n dictionary (loaded server-side) passed to client components
+ *
+ * Static params are pre-generated for all supported locales so every
+ * `/{locale}` path is statically built at deploy time.
+ */
+
 import type { Metadata } from 'next'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'

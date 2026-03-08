@@ -1,3 +1,11 @@
+/**
+ * @file HeroSection.tsx — Homepage hero with featured articles
+ *
+ * Displays the top featured article as a large card with image, plus
+ * a sidebar of secondary featured articles. Responsive grid layout.
+ * Images are loaded from Sanity CDN via `urlFor()`.
+ */
+
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';

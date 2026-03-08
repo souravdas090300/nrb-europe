@@ -1,4 +1,11 @@
-﻿'use client'
+﻿/**
+ * @file Footer.tsx — Site footer (Client Component)
+ *
+ * Displays brand info, quick-links to major sections, social media icons,
+ * and a copyright line. Supports dark mode and i18n via the dictionary prop.
+ */
+
+'use client'
 
 import React from 'react'
 import Link from 'next/link'

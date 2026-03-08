@@ -1,26 +1,41 @@
 /**
- * Brute-Force Protection — Account lockout after repeated failed login attempts
- * 
- * Tracks failed attempts per IP and per email. Locks out after threshold.
- * Auto-unlocks after cooldown period.
+ * @file brute-force.ts — Account lockout after repeated failed login attempts
+ *
+ * Dual-tracking strategy:
+ *  - **Per-IP**: locks out after 20 failed attempts (catches distributed attacks)
+ *  - **Per-email**: locks out after 5 failed attempts (protects individual accounts)
+ *
+ * Lockout duration: 15 minutes. Sliding window: 30 minutes.
+ * Progressive delays (0, 0, 0, 1s, 2s, 5s) slow down attackers even before lockout.
+ *
+ * All state is stored in-memory Maps — resets on server restart.
+ * For production multi-instance deployments, consider a Redis-backed implementation.
+ *
+ * @see {@link src/lib/auth.ts} — Credentials provider integrates these checks
  */
 
+/** Internal tracking entry for failed login attempts. */
 interface LockoutEntry {
   attempts: number
   lastAttempt: number
   lockedUntil: number | null
 }
 
+/** In-memory stores — keyed by IP address and by email respectively. */
 const ipAttempts = new Map<string, LockoutEntry>()
 const emailAttempts = new Map<string, LockoutEntry>()
 
-// Configuration
+// ---------------------------------------------------------------------------
+// Configuration constants
+// ---------------------------------------------------------------------------
 const MAX_ATTEMPTS_PER_IP = 20       // 20 failed attempts from same IP
 const MAX_ATTEMPTS_PER_EMAIL = 5     // 5 failed attempts on same email
 const LOCKOUT_DURATION = 15 * 60_000 // 15 minutes lockout
 const ATTEMPT_WINDOW = 30 * 60_000   // 30 minute sliding window
-const PROGRESSIVE_DELAYS = [0, 0, 0, 1000, 2000, 5000] // Progressive delay after 3rd attempt (ms)
+/** Artificial delay (ms) indexed by attempt number — slows repeated guesses. */
+const PROGRESSIVE_DELAYS = [0, 0, 0, 1000, 2000, 5000]
 
+/** Purge entries whose window has expired and whose lockout (if any) has lifted. */
 function cleanup(map: Map<string, LockoutEntry>) {
   const now = Date.now()
   const keys: string[] = []
@@ -32,6 +47,7 @@ function cleanup(map: Map<string, LockoutEntry>) {
   keys.forEach(key => map.delete(key))
 }
 
+/** Retrieve or initialise a lockout entry, resetting stale/unlocked entries. */
 function getEntry(map: Map<string, LockoutEntry>, key: string): LockoutEntry {
   const existing = map.get(key)
   const now = Date.now()

@@ -1,3 +1,14 @@
+/**
+ * @file POST /api/stripe/create-checkout — Create a Stripe Checkout Session
+ *
+ * Requires an authenticated user session. Accepts a `plan` in the request
+ * body ("monthly" | "yearly"), resolves or creates a Stripe Customer for
+ * the user, and returns a Checkout Session ID for client-side redirect.
+ *
+ * The `userId` and `plan` are stored in Stripe session metadata so the
+ * webhook handler can link the subscription back to the correct user.
+ */
+
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'

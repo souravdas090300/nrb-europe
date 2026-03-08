@@ -1,10 +1,15 @@
 /**
- * CSRF Protection — Token-based CSRF prevention for API routes
- * 
- * Uses double-submit cookie pattern:
- * 1. Server generates a CSRF token and sets it as a cookie
- * 2. Client reads the cookie and sends as X-CSRF-Token header
- * 3. Server verifies header matches cookie
+ * @file csrf.ts — CSRF protection using the double-submit cookie pattern
+ *
+ * How it works:
+ *  1. Server generates a random CSRF token and sets it as a **non-httpOnly** cookie.
+ *  2. Client-side JS reads the cookie and sends it in the `X-CSRF-Token` header.
+ *  3. Server compares cookie vs. header using constant-time comparison.
+ *
+ * GET / HEAD / OPTIONS requests are exempt (safe methods).
+ * Cookie lifetime: 24 hours. Token length: 32 bytes (64 hex chars).
+ *
+ * @see https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html
  */
 
 import { NextRequest, NextResponse } from 'next/server'

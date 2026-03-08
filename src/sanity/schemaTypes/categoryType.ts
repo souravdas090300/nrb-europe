@@ -1,3 +1,13 @@
+/**
+ * @file categoryType.ts — Sanity schema for the "category" document type
+ *
+ * Categories are used to classify articles (e.g. Politics, Technology, Immigration).
+ * Each category has a title, slug (for URL routing), optional description,
+ * and a badge color used in the UI.
+ *
+ * Referenced by posts via the `categories` array field.
+ */
+
 import {TagIcon} from '@sanity/icons'
 import {defineField, defineType} from 'sanity'
 

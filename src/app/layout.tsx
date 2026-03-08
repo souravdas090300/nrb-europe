@@ -1,3 +1,17 @@
+/**
+ * @file app/layout.tsx — Root layout (wraps the entire Next.js application)
+ *
+ * Sets up:
+ *  - Inter font (Google Fonts)
+ *  - Global CSS
+ *  - NextAuth `<SessionProvider>` (via `<Providers>`)
+ *  - Default `<html>` lang and body classes
+ *  - Base metadata (title template, description)
+ *
+ * All pages — including auth pages, admin, and locale-prefixed pages —
+ * inherit from this layout.
+ */
+
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import '@/styles/globals.css'

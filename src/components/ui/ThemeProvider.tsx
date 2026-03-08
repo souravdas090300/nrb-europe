@@ -1,3 +1,16 @@
+/**
+ * @file ThemeProvider.tsx — Dark/light theme context provider
+ *
+ * Persists the user’s theme preference in `localStorage` and applies the
+ * `dark` class to `<html>` for Tailwind’s class-based dark mode.
+ * Provides `theme` (current value) and `toggleTheme()` via React Context.
+ *
+ * @example
+ * ```tsx
+ * const { theme, toggleTheme } = useTheme()
+ * ```
+ */
+
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'

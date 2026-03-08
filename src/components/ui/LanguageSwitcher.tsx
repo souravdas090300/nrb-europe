@@ -1,3 +1,11 @@
+/**
+ * @file LanguageSwitcher.tsx — Locale switcher dropdown
+ *
+ * Renders a dropdown that swaps the locale segment in the URL path
+ * (e.g. `/en/about` → `/bn/about`) and persists the choice in a
+ * `NEXT_LOCALE` cookie so the middleware respects it on next visit.
+ */
+
 'use client'
 
 import { usePathname, useRouter } from 'next/navigation'

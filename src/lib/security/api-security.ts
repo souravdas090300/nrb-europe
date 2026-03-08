@@ -1,12 +1,26 @@
 /**
- * API Security Middleware — Unified security layer for all API routes
- * 
- * Usage:
- *   import { withSecurity } from '@/lib/security/api-security'
- *   
- *   export const POST = withSecurity(async (req) => {
- *     // your handler
- *   }, { rateLimit: 'auth', requireAuth: true, adminOnly: true })
+ * @file api-security.ts — Unified security middleware for Next.js API routes
+ *
+ * Wraps any route handler with a configurable security pipeline:
+ *  1. HTTP method validation
+ *  2. Rate limiting (via pre-configured or custom limiter)
+ *  3. Request body size enforcement
+ *  4. Authentication check (NextAuth session)
+ *  5. Admin role authorisation
+ *  6. Input sanitisation (strips HTML from JSON body)
+ *  7. Security response headers (`X-Content-Type-Options`, `X-Frame-Options`)
+ *
+ * @example
+ * ```ts
+ * import { withSecurity } from '@/lib/security/api-security'
+ *
+ * export const POST = withSecurity(async (req, ctx) => {
+ *   // `ctx.session` is guaranteed non-null when requireAuth is true
+ *   return NextResponse.json({ ok: true })
+ * }, { rateLimit: 'auth', requireAuth: true })
+ * ```
+ *
+ * @see {@link SecurityOptions} for all configuration knobs
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -22,7 +36,10 @@ import {
 } from './rate-limit'
 import { sanitizeBody } from './sanitize'
 
-// IP extraction
+/**
+ * Extract the real client IP from proxy headers.
+ * Checks `x-forwarded-for`, `x-real-ip`, and `cf-connecting-ip` (Cloudflare).
+ */
 function getClientIp(request: NextRequest): string {
   return (
     request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
@@ -32,7 +49,7 @@ function getClientIp(request: NextRequest): string {
   )
 }
 
-// Rate limiter map
+/** Maps limiter names to pre-configured rate limiter instances. */
 const limiters = {
   api: apiLimiter,
   auth: authLimiter,
@@ -74,7 +91,10 @@ type SecureHandler = (
   context: SecurityContext & { params?: Record<string, string> }
 ) => Promise<NextResponse | Response>
 
-// Security event logger
+/**
+ * Log a security event to the console (production) or dev tools.
+ * In production this could be forwarded to Sentry / LogRocket / Datadog.
+ */
 function logSecurityEvent(event: string, details: Record<string, unknown>) {
   const timestamp = new Date().toISOString()
   const logEntry = { timestamp, event, ...details }

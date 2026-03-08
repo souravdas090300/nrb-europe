@@ -1,3 +1,17 @@
+/**
+ * @file postType.ts — Sanity schema for the "post" (Article) document type
+ *
+ * The primary content type in the CMS. Each post represents a news article
+ * with a headline, author, featured image, categories, Portable Text body,
+ * and optional SEO overrides.
+ *
+ * Special flags:
+ *  - `isBreaking` — surfaces the article in the breaking-news ticker
+ *  - `isFeatured` — promotes the article to the homepage hero section
+ *
+ * Referenced by: homepage, category pages, RSS feed, sitemap, article pages.
+ */
+
 import {DocumentTextIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 

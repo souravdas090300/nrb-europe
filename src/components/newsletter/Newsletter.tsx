@@ -1,3 +1,11 @@
+/**
+ * @file Newsletter.tsx — Email newsletter subscription form
+ *
+ * Renders an email input + subscribe button. On submit, POSTs to
+ * `/api/newsletter/subscribe` and shows success/error feedback.
+ * Supports i18n via the `dictionary` prop.
+ */
+
 'use client';
 
 import React, { useState } from 'react';

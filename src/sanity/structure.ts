@@ -1,3 +1,11 @@
+/**
+ * @file sanity/structure.ts — Custom Sanity Studio desk structure
+ *
+ * Defines the sidebar navigation tree for the embedded Sanity Studio
+ * at `/admin/studio`. Organises content into an editorial workflow
+ * with sections for articles, authors, categories, and site settings.
+ */
+
 import type {StructureResolver} from 'sanity/structure'
 import {
   DocumentTextIcon,
@@ -11,7 +19,11 @@ import {
   PublishIcon,
 } from '@sanity/icons'
 
-// Editorial workflow structure for Sanity Studio
+/**
+ * Desk structure resolver.
+ * Builds the Studio sidebar with filtered lists for editorial workflow
+ * (drafts, published, recent), content types, and admin tools.
+ */
 export const structure: StructureResolver = (S, context) =>
   S.list()
     .title('Content')

@@ -1,9 +1,32 @@
+/**
+ * @file redis.ts — Redis caching layer (optional, gracefully degrades)
+ *
+ * Provides a singleton ioredis client and cache-aside helpers used
+ * throughout the app (comments, search results, article data).
+ *
+ * Key design choices:
+ *  - **Graceful degradation**: if `REDIS_URL` is unset or the connection
+ *    fails, every helper silently falls through to the underlying data
+ *    source. The app works fine without Redis — it just won’t cache.
+ *  - **SCAN-based invalidation**: pattern-based cache busting uses
+ *    `SCAN` instead of `KEYS` to avoid blocking the Redis event loop.
+ *  - **Lazy connect**: the client is created with `lazyConnect: true` so
+ *    the connection is only established on the first command.
+ *
+ * Environment:
+ *  - `REDIS_URL` — full Redis connection string (e.g. `redis://...`)
+ *
+ * @see {@link src/app/api/comments/route.ts} for usage example
+ */
+
 import Redis from 'ioredis'
 
+/** Singleton Redis instance (null if REDIS_URL is not configured). */
 let redis: Redis | null = null
 
 /**
- * Get a singleton Redis client. Returns null if REDIS_URL is not configured.
+ * Get (or create) the singleton Redis client.
+ * Returns `null` if `REDIS_URL` is not set, allowing the app to run without Redis.
  */
 export function getRedis(): Redis | null {
   if (redis) return redis

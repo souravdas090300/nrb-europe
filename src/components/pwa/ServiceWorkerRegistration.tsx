@@ -1,3 +1,11 @@
+/**
+ * @file ServiceWorkerRegistration.tsx — PWA service worker lifecycle manager
+ *
+ * Registers `/sw.js` in production, listens for update events, and
+ * auto-activates new versions. Renders nothing — purely a side-effect
+ * component included in the root layout.
+ */
+
 'use client'
 
 import { useEffect } from 'react'

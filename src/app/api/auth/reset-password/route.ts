@@ -1,3 +1,13 @@
+/**
+ * @file POST /api/auth/reset-password — Set a new password using a reset token
+ *
+ * Validates the token format (64 hex chars), checks it exists and hasn’t expired,
+ * enforces password-strength rules, hashes the new password with bcrypt (12 rounds),
+ * updates the User record, and deletes the consumed token.
+ *
+ * Rate-limited to 5 attempts per minute per IP via `strictLimiter`.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'

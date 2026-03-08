@@ -1,3 +1,18 @@
+/**
+ * @file POST /api/auth/forgot-password — Password reset request
+ *
+ * Accepts an email address and (if the account exists and uses credentials)
+ * generates a password-reset token valid for 1 hour.
+ *
+ * Security measures:
+ *  - Strict rate limit: 5 requests/min per IP
+ *  - Always returns the same success message regardless of whether the email
+ *    exists (prevents email enumeration)
+ *  - Artificial random delay (500–1000 ms) to defeat timing attacks
+ *  - Only sends reset emails to credential-based accounts (not OAuth-only)
+ *  - Deletes any existing tokens before creating a new one
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'

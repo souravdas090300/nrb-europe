@@ -1,7 +1,17 @@
 'use client'
 
 /**
- * This configuration is used to for the Sanity Studio that’s mounted on the `\src\app\studio\[[...tool]]\page.tsx` route
+ * @file sanity.config.ts — Sanity Studio configuration
+ *
+ * Configures the embedded Sanity Studio mounted at `/admin/studio`.
+ * Includes:
+ *  - Structure Tool with custom desk structure (editorial workflow)
+ *  - Vision Tool for GROQ playground (dev only)
+ *  - Custom document actions (publish workflow)
+ *  - Schema definitions (post, author, category, blockContent, seo)
+ *
+ * @see {@link src/sanity/schemaTypes/} for schema definitions
+ * @see {@link src/sanity/admin/config/deskStructure.ts} for sidebar layout
  */
 
 import {visionTool} from '@sanity/vision'

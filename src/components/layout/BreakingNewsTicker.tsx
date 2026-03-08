@@ -1,3 +1,12 @@
+/**
+ * @file BreakingNewsTicker.tsx — Auto-scrolling breaking-news banner
+ *
+ * Rotates through a list of breaking news headlines with a slide-up
+ * animation. Shown at the top of the homepage. Currently uses hardcoded
+ * sample items; in production, these should come from the Sanity
+ * `breakingNewsQuery`.
+ */
+
 'use client';
 
 import React, { useState, useEffect } from 'react';

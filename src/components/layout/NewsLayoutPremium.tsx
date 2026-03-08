@@ -1,3 +1,14 @@
+/**
+ * @file NewsLayoutPremium.tsx — Premium news grid layout component
+ *
+ * A reusable server-compatible layout that renders articles in a
+ * newspaper-style grid: large feature card on the left, plus a sidebar
+ * of smaller cards and a trending/opinion column on the right.
+ *
+ * Used on the homepage and category pages to display article listings
+ * fetched from Sanity.
+ */
+
 import React from 'react'
 import Link from 'next/link'
 import Image from 'next/image'

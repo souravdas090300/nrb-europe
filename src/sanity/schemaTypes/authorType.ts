@@ -1,3 +1,13 @@
+/**
+ * @file authorType.ts — Sanity schema for the "author" document type
+ *
+ * Represents a journalist or contributor. Referenced by posts via the
+ * `author` field. Displayed on article pages and author bylines.
+ *
+ * Fields include name, slug (for author pages), avatar, bio (Portable Text),
+ * and optional social links (Twitter, LinkedIn, email).
+ */
+
 import {UserIcon} from '@sanity/icons'
 import {defineArrayMember, defineField, defineType} from 'sanity'
 

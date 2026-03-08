@@ -1,3 +1,19 @@
+/**
+ * @file POST /api/stripe/webhook — Stripe webhook handler
+ *
+ * Receives and validates Stripe webhook events using the signing secret.
+ * Each event is processed inside a Sentry span for observability.
+ *
+ * Handled events:
+ *  - `checkout.session.completed` — Creates Subscription, upgrades user role
+ *  - `customer.subscription.updated` — Syncs status & period end
+ *  - `customer.subscription.deleted` — Marks subscription as canceled
+ *  - `invoice.payment_succeeded` — Records Payment in the database
+ *
+ * @important This endpoint must receive the raw request body (not parsed JSON)
+ *           for Stripe signature verification to work.
+ */
+
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'

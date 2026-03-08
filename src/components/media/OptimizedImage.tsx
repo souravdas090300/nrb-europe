@@ -1,3 +1,11 @@
+/**
+ * @file OptimizedImage.tsx — Sanity-aware responsive image component
+ *
+ * Wraps Next.js `<Image>` with automatic Sanity CDN URL generation
+ * via `urlFor()`. Supports responsive sizes, hotspot cropping,
+ * blur placeholders, and custom quality settings.
+ */
+
 'use client'
 
 import Image from 'next/image'

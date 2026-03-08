@@ -1,7 +1,30 @@
+/**
+ * @file email.ts — Transactional email service powered by Resend
+ *
+ * Provides helper functions for all outbound emails:
+ *  - Verification emails (account creation)
+ *  - Welcome emails (post-subscription)
+ *  - Password reset emails
+ *  - Newsletter distribution
+ *
+ * All emails use branded HTML templates with inline CSS.
+ *
+ * Configuration:
+ *  - `RESEND_API_KEY`  — Resend API key (required)
+ *  - `EMAIL_FROM`      — Sender address (fallback: onboarding@resend.dev)
+ *  - `NEXTAUTH_URL`    — Base URL used in email links
+ *
+ * @note The sending domain (nrbeurope.com) must be verified in the Resend
+ *       dashboard before emails can be sent from a custom address.
+ *       Until verified, use `onboarding@resend.dev` as the fallback.
+ */
+
 import { Resend } from 'resend'
 
+/** Singleton Resend client instance */
 let _resend: Resend | null = null
 
+/** Lazily initialise and return the Resend SDK client. */
 function getResend() {
   if (!_resend) {
     _resend = new Resend(process.env.RESEND_API_KEY)
@@ -9,8 +32,22 @@ function getResend() {
   return _resend
 }
 
+/**
+ * Sender address for all outgoing emails.
+ * Uses the `EMAIL_FROM` env var if set, otherwise falls back to the
+ * Resend sandbox address (only delivers to the account owner's email).
+ */
 const FROM_EMAIL = process.env.EMAIL_FROM || 'NRB Europe <onboarding@resend.dev>'
 
+/**
+ * Low-level email sender — wraps Resend SDK.
+ * Throws on failure so callers can handle errors (e.g. show a message to the user).
+ *
+ * @param to      - Recipient email address
+ * @param subject - Email subject line
+ * @param html    - Full HTML body of the email
+ * @throws {Error} If the Resend API returns an error or the request fails
+ */
 export const sendEmail = async ({
   to,
   subject,
@@ -37,6 +74,13 @@ export const sendEmail = async ({
   }
 }
 
+/**
+ * Send a welcome email after a user subscribes to a paid plan.
+ * Lists subscriber benefits (unlimited access, ad-free, exclusive content).
+ *
+ * @param email - Subscriber's email address
+ * @param name  - Subscriber's display name
+ */
 export const sendWelcomeEmail = async (email: string, name: string) => {
   const html = `
     <!DOCTYPE html>
@@ -75,6 +119,14 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
   await sendEmail({ to: email, subject: 'Welcome to NRB Europe!', html })
 }
 
+/**
+ * Send an email-verification link after account registration.
+ * The token is valid for 24 hours (enforced by the verify API route).
+ *
+ * @param email - New user's email address
+ * @param name  - New user's display name
+ * @param token - 32-byte hex verification token
+ */
 export const sendVerificationEmail = async (email: string, name: string, token: string) => {
   const verifyUrl = `${process.env.NEXTAUTH_URL}/verify?token=${token}`
 
@@ -112,6 +164,14 @@ export const sendVerificationEmail = async (email: string, name: string, token: 
   await sendEmail({ to: email, subject: 'Verify your email - NRB Europe', html })
 }
 
+/**
+ * Send a password-reset link. The token is valid for 1 hour.
+ * Only sent to users who signed up with credentials (not OAuth-only).
+ *
+ * @param email - User's email address
+ * @param name  - User's display name
+ * @param token - 32-byte hex reset token
+ */
 export const sendPasswordResetEmail = async (email: string, name: string, token: string) => {
   const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`
 
@@ -149,6 +209,15 @@ export const sendPasswordResetEmail = async (email: string, name: string, token:
   await sendEmail({ to: email, subject: 'Reset your password - NRB Europe', html })
 }
 
+/**
+ * Send a newsletter email to a subscriber.
+ * Wraps the provided HTML content in the NRB Europe branded template
+ * and appends an unsubscribe link.
+ *
+ * @param email   - Subscriber's email address
+ * @param subject - Newsletter subject line
+ * @param content - Inner HTML content (article summaries, etc.)
+ */
 export const sendNewsletterEmail = async (
   email: string,
   subject: string,

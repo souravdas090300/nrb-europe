@@ -1,3 +1,18 @@
+/**
+ * @file Header.tsx — Main site header (Client Component)
+ *
+ * Responsive header with:
+ *  - NRB Europe logo + current date
+ *  - Desktop: horizontal category nav, search link, language switcher,
+ *    dark-mode toggle, and user avatar dropdown (sign-in / profile / sign-out)
+ *  - Mobile: hamburger menu containing the full nav, overflow categories,
+ *    auth actions, language switcher, and theme toggle
+ *  - Sticky behaviour with a slim scrolled state
+ *
+ * @param lang       - Current locale code
+ * @param dictionary - Translation dictionary for the active locale
+ */
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -10,7 +25,7 @@ import { Locale } from '@/lib/i18n-config'
 import { categories } from '@/lib/constants'
 import NrbLogo from '../ui/NrbLogo'
 
-// Items that go inside the hamburger menu
+/** Category slugs that are shown only in the hamburger menu (not the top nav bar). */
 const HAMBURGER_SLUGS = new Set(['jobs', 'travel'])
 
 const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
@@ -134,9 +149,9 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           <LanguageSwitcher />
         </div>
 
-        {/* User Menu / Sign In */}
+        {/* User Menu / Sign In — hidden on mobile, shown on md+ */}
         {session ? (
-          <div className="shrink-0 relative">
+          <div className="shrink-0 relative hidden md:block">
             <button
               type="button"
               onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -174,7 +189,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
         ) : (
           <Link
             href="/login"
-            className="shrink-0 text-[11px] font-bold uppercase bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition"
+            className="shrink-0 text-[11px] font-bold uppercase bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition hidden md:inline-block"
           >
             Sign In
           </Link>
@@ -204,6 +219,10 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           <div className="flex flex-col gap-2 max-w-[1400px] mx-auto">
             {session ? (
               <>
+                <div className="px-2 py-2 mb-1 border-b border-gray-200 dark:border-gray-700 md:hidden">
+                  <p className={`font-medium text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>{session.user.name}</p>
+                  <p className="text-xs text-gray-500">{session.user.email}</p>
+                </div>
                 <Link
                   href="/admin"
                   onClick={() => setMenuOpen(false)}
@@ -212,6 +231,26 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   }`}
                 >
                   <User size={14} /> Dashboard
+                </Link>
+                {session.user.role === 'admin' && (
+                  <Link
+                    href="/admin/studio"
+                    onClick={() => setMenuOpen(false)}
+                    className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+                    }`}
+                  >
+                    <Briefcase size={14} /> Content Studio
+                  </Link>
+                )}
+                <Link
+                  href="/profile"
+                  onClick={() => setMenuOpen(false)}
+                  className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+                  }`}
+                >
+                  <User size={14} /> Profile
                 </Link>
                 <button
                   onClick={() => { signOut(); setMenuOpen(false) }}
@@ -222,7 +261,18 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   <LogOut size={14} /> Sign Out
                 </button>
               </>
-            ) : null}
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setMenuOpen(false)}
+                className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                  theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+                }`}
+              >
+                <User size={14} /> Sign In
+              </Link>
+            )}
+            <hr className={`my-1 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
             {/* All categories in hamburger menu */}
             {categories.map((cat) => (
               <Link
