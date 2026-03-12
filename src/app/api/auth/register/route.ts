@@ -39,16 +39,22 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  let body: { email?: unknown; name?: unknown; password?: unknown }
   try {
-    const body = await request.json()
+    body = await request.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+  }
+
+  try {
     const rawEmail = body.email
     const rawName = body.name
     const rawPassword = body.password
 
     // Sanitize inputs
-    const email = sanitizeEmail(rawEmail)
-    const name = sanitizeString(rawName || '')
-    const password = rawPassword // Don't sanitize passwords — they can contain special chars
+    const email = sanitizeEmail(typeof rawEmail === 'string' ? rawEmail : '')
+    const name = sanitizeString(typeof rawName === 'string' ? rawName : '')
+    const password = typeof rawPassword === 'string' ? rawPassword : '' // Don't sanitize passwords — they can contain special chars
 
     if (!email) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
@@ -91,16 +97,32 @@ export async function POST(request: NextRequest) {
     // Hash with higher cost factor (12 rounds)
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        name,
-        password: hashedPassword,
-        role: 'subscriber',
-      },
-    })
+    let user: { id: string }
+    try {
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          role: 'subscriber',
+          // Auto-verify in development: Resend sandbox only sends to the account owner's email,
+          // so enforce email verification only when a verified sending domain is configured.
+          ...(process.env.NODE_ENV === 'development' && { emailVerified: new Date() }),
+        },
+        select: { id: true },
+      })
+    } catch (createError: any) {
+      // P2002 = unique constraint violation (race condition: two simultaneous registrations)
+      if (createError?.code === 'P2002') {
+        return NextResponse.json(
+          { error: 'Unable to create account. If you already have an account, try signing in.' },
+          { status: 409 }
+        )
+      }
+      throw createError
+    }
 
-    // Generate verification token
+    // Generate verification token (still useful even in dev for future prod use)
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -111,6 +133,14 @@ export async function POST(request: NextRequest) {
         expires,
       },
     })
+
+    // In development, email is auto-verified so skip the send
+    if (process.env.NODE_ENV === 'development') {
+      return NextResponse.json(
+        { message: 'Account created successfully. You can now sign in.', userId: user.id },
+        { status: 201 }
+      )
+    }
 
     // Send verification email
     try {
@@ -128,7 +158,15 @@ export async function POST(request: NextRequest) {
       { message: 'Account created. Please check your email to verify your account.', userId: user.id },
       { status: 201 }
     )
-  } catch (error) {
+  } catch (error: any) {
+    // P1001/P1008/P1017: DB unreachable (Neon cold-start, connection closed, etc.)
+    if (error?.code?.startsWith('P1')) {
+      console.error('Database connection error during registration:', error)
+      return NextResponse.json(
+        { error: 'Service temporarily unavailable. Please try again in a moment.' },
+        { status: 503 }
+      )
+    }
     Sentry.captureException(error)
     console.error('Registration error:', error)
     return NextResponse.json(

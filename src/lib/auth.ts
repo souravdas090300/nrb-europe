@@ -66,6 +66,9 @@ export const authOptions: NextAuthOptions = {
 
         const user = await prisma.user.findUnique({
           where: { email },
+        }).catch((dbError) => {
+          console.error('Database error during credential lookup:', dbError)
+          throw new Error('Authentication service is temporarily unavailable. Please try again.')
         })
 
         if (!user || !user.password) {
