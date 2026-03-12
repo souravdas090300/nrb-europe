@@ -17,6 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
@@ -24,6 +25,9 @@ import * as Sentry from '@sentry/nextjs'
 import { sendVerificationEmail } from '@/lib/email'
 import { authLimiter } from '@/lib/security/rate-limit'
 import { sanitizeString, sanitizeEmail, validateLength } from '@/lib/security/sanitize'
+
+// Prisma is not supported in Edge runtime; force Node.js on Vercel.
+export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   // Rate limit: 10 registration attempts per 15 minutes per IP
@@ -159,6 +163,25 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
+    if (
+      error instanceof Prisma.PrismaClientInitializationError ||
+      error instanceof Prisma.PrismaClientRustPanicError
+    ) {
+      console.error('Prisma initialization error during registration:', error)
+      return NextResponse.json(
+        { error: 'Authentication service is temporarily unavailable. Please try again later.' },
+        { status: 503 }
+      )
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === 'P2021' || error.code === 'P2022')) {
+      console.error('Prisma schema mismatch during registration:', error)
+      return NextResponse.json(
+        { error: 'Service configuration issue detected. Please contact support.' },
+        { status: 503 }
+      )
+    }
+
     // P1001/P1008/P1017: DB unreachable (Neon cold-start, connection closed, etc.)
     if (error?.code?.startsWith('P1')) {
       console.error('Database connection error during registration:', error)
