@@ -295,8 +295,6 @@ In Vercel Dashboard → Settings → Environment Variables, add all variables fr
 - `NEXTAUTH_SECRET`
 - All Sanity, Stripe, Resend, Google variables
 
-If Vercel is missing `DIRECT_DATABASE_URL`, the build falls back to `DATABASE_URL` so `prisma migrate deploy` can still run. Keep `DIRECT_DATABASE_URL` configured in production when your provider uses pooled URLs.
-
 ### 3. Configure Build
 
 The `vercel.json` handles build settings:

@@ -1,4 +1,4 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "node scripts/vercel-build.js"
+  "buildCommand": "npx prisma generate && npx prisma migrate deploy && npm run build"
 }
