@@ -23,6 +23,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import * as Sentry from '@sentry/nextjs'
 import { sendVerificationEmail } from '@/lib/email'
+import { isTransientPrismaError, withPrismaRetry } from '@/lib/prisma-retry'
 import { authLimiter } from '@/lib/security/rate-limit'
 import { sanitizeString, sanitizeEmail, validateLength } from '@/lib/security/sanitize'
 
@@ -86,9 +87,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await withPrismaRetry(() => prisma.user.findUnique({
       where: { email },
-    })
+    }))
 
     if (existingUser) {
       // Don't reveal whether email exists — use generic message
@@ -103,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     let user: { id: string }
     try {
-      user = await prisma.user.create({
+      user = await withPrismaRetry(() => prisma.user.create({
         data: {
           email,
           name,
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
           ...(process.env.NODE_ENV === 'development' && { emailVerified: new Date() }),
         },
         select: { id: true },
-      })
+      }))
     } catch (createError: any) {
       // P2002 = unique constraint violation (race condition: two simultaneous registrations)
       if (createError?.code === 'P2002') {
@@ -130,13 +131,13 @@ export async function POST(request: NextRequest) {
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    await prisma.verificationToken.create({
+    await withPrismaRetry(() => prisma.verificationToken.create({
       data: {
         identifier: email,
         token: verificationToken,
         expires,
       },
-    })
+    }))
 
     // In development, email is auto-verified so skip the send
     if (process.env.NODE_ENV === 'development') {
@@ -163,10 +164,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     )
   } catch (error: any) {
-    if (
-      error instanceof Prisma.PrismaClientInitializationError ||
-      error instanceof Prisma.PrismaClientRustPanicError
-    ) {
+    if (isTransientPrismaError(error)) {
       console.error('Prisma initialization error during registration:', error)
       return NextResponse.json(
         { error: 'Authentication service is temporarily unavailable. Please try again later.' },
@@ -182,14 +180,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // P1001/P1008/P1017: DB unreachable (Neon cold-start, connection closed, etc.)
-    if (error?.code?.startsWith('P1')) {
-      console.error('Database connection error during registration:', error)
-      return NextResponse.json(
-        { error: 'Service temporarily unavailable. Please try again in a moment.' },
-        { status: 503 }
-      )
-    }
     Sentry.captureException(error)
     console.error('Registration error:', error)
     return NextResponse.json(

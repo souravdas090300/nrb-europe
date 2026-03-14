@@ -22,6 +22,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
+import { withPrismaRetry } from './prisma-retry'
 import { checkBruteForce, recordFailedAttempt, recordSuccessfulLogin } from './security/brute-force'
 
 /**
@@ -64,9 +65,9 @@ export const authOptions: NextAuthOptions = {
           await new Promise((resolve) => setTimeout(resolve, bruteForceCheck.delay))
         }
 
-        const user = await prisma.user.findUnique({
+        const user = await withPrismaRetry(() => prisma.user.findUnique({
           where: { email },
-        }).catch((dbError) => {
+        })).catch((dbError) => {
           console.error('Database error during credential lookup:', dbError)
           throw new Error('Authentication service is temporarily unavailable. Please try again.')
         })
@@ -108,7 +109,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id
         // For OAuth sign-ins, fetch role from DB since it's not on the user object
         if (account?.provider !== 'credentials') {
-          const dbUser = await prisma.user.findUnique({ where: { id: user.id } })
+          const dbUser = await withPrismaRetry(() => prisma.user.findUnique({ where: { id: user.id } }))
           token.role = dbUser?.role ?? 'subscriber'
         } else {
           token.role = (user as any).role

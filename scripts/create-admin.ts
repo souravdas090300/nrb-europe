@@ -7,6 +7,7 @@ async function main() {
   const email = process.env.ADMIN_EMAIL || 'souravdas090300@gmail.com'
   const legacyAdminEmail = 'admin@nrbeurope.com'
   const password = 'admin123' // Change this in production!
+  const hashedPassword = await bcrypt.hash(password, 10)
 
   const existingUser = await prisma.user.findUnique({ where: { email } })
 
@@ -19,7 +20,13 @@ async function main() {
         data: { email, role: 'admin', emailVerified: legacyUser.emailVerified ?? new Date() },
       })
 
+      await prisma.user.update({
+        where: { email },
+        data: { password: hashedPassword },
+      })
+
       console.log('Legacy admin migrated to:', migrated.email)
+      console.log('Password reset to: admin123')
       return
     }
   }
@@ -27,14 +34,17 @@ async function main() {
   if (existingUser) {
     const updated = await prisma.user.update({
       where: { email },
-      data: { role: 'admin', emailVerified: existingUser.emailVerified ?? new Date() },
+      data: {
+        role: 'admin',
+        emailVerified: existingUser.emailVerified ?? new Date(),
+        password: hashedPassword,
+      },
     })
 
     console.log('Admin user already exists and is ready:', updated.email)
+    console.log('Password reset to: admin123')
     return
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10)
 
   const user = await prisma.user.create({
     data: {
