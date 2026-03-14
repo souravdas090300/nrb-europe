@@ -11,7 +11,7 @@ export default function RequireAdmin({ children }: { children: React.ReactNode }
   useEffect(() => {
     if (status === 'loading') return
     if (!session) {
-      router.replace('/login?callbackUrl=/admin')
+      router.replace('/admin-login')
       return
     }
 

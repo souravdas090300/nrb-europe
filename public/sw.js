@@ -12,7 +12,23 @@ const PRECACHE_URLS = [
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_URLS))
+      .then(async cache => {
+        const results = await Promise.allSettled(
+          PRECACHE_URLS.map(async (url) => {
+            const response = await fetch(url, { cache: 'no-cache' })
+            if (!response.ok) {
+              throw new Error(`Precache failed for ${url}: ${response.status}`)
+            }
+            await cache.put(url, response)
+          })
+        )
+
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.warn('[SW] Skipping precache URL:', PRECACHE_URLS[index], result.reason)
+          }
+        })
+      })
       .then(() => self.skipWaiting())
   )
 })

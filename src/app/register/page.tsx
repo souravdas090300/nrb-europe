@@ -40,6 +40,25 @@ function RegisterForm() {
   const strength = useMemo(() => getPasswordStrength(password), [password])
   const meetsRequirements = strength.checks.hasLength && strength.checks.hasUpper && strength.checks.hasLower && strength.checks.hasNumber
 
+  const postRegisterWithRetry = async (payload: { name: string; email: string; password: string }) => {
+    const maxAttempts = 3
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (res.status !== 503 || attempt === maxAttempts) {
+        return res
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 400 * attempt))
+    }
+
+    throw new Error('Registration retry failed')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -75,11 +94,7 @@ function RegisterForm() {
       const res = await Sentry.startSpan(
         { op: 'http.client', name: 'POST /api/auth/register' },
         async () => {
-          return await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: trimmedName, email: sanitizedEmail, password }),
-          })
+          return await postRegisterWithRetry({ name: trimmedName, email: sanitizedEmail, password })
         },
       )
 

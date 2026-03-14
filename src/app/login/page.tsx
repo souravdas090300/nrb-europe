@@ -1,6 +1,6 @@
 'use client'
 
-import { signIn } from 'next-auth/react'
+import { signIn, signOut } from 'next-auth/react'
 import { getSession } from 'next-auth/react'
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -19,6 +19,7 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
   const oauthError = searchParams.get('error')
+  const isAdminLogin = searchParams.get('admin') === 'true'
   const callbackUrlParam = searchParams.get('callbackUrl')
   const safeCallbackUrl = callbackUrlParam?.startsWith('/') ? callbackUrlParam : null
 
@@ -100,6 +101,12 @@ function LoginForm() {
         const session = await getSession()
         const role = session?.user?.role
 
+        if (isAdminLogin && role !== 'admin') {
+          await signOut({ redirect: false })
+          setError('Only admin accounts can sign in here.')
+          return
+        }
+
         if (safeCallbackUrl) {
           if (safeCallbackUrl.startsWith('/admin') && role !== 'admin') {
             router.push('/profile?error=admin_required')
@@ -126,7 +133,9 @@ function LoginForm() {
         </Link>
       </div>
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">Sign In</h1>
+        <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
+          {isAdminLogin ? 'Admin Sign In' : 'Sign In'}
+        </h1>
 
         {justRegistered && (
           <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-sm">
@@ -209,7 +218,7 @@ function LoginForm() {
 
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: safeCallbackUrl ?? '/profile' })}
+          onClick={() => signIn('google', { callbackUrl: safeCallbackUrl ?? (isAdminLogin ? '/admin' : '/profile') })}
           className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition font-medium"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -221,14 +230,16 @@ function LoginForm() {
           Sign in with Google
         </button>
 
-        <div className="mt-4">
-          <Link
-            href="/register"
-            className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
-          >
-            Create Account
-          </Link>
-        </div>
+        {!isAdminLogin && (
+          <div className="mt-4">
+            <Link
+              href="/register"
+              className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
+            >
+              Create Account
+            </Link>
+          </div>
+        )}
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           <Link href="/" className="text-blue-600 hover:underline">

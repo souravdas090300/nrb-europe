@@ -131,13 +131,32 @@ export async function POST(request: NextRequest) {
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
-    await withPrismaRetry(() => prisma.verificationToken.create({
-      data: {
-        identifier: email,
-        token: verificationToken,
-        expires,
-      },
-    }))
+    try {
+      await withPrismaRetry(() => prisma.verificationToken.create({
+        data: {
+          identifier: email,
+          token: verificationToken,
+          expires,
+        },
+      }))
+    } catch (tokenError: any) {
+      // Fallback for deployments where VerificationToken table is missing.
+      if (tokenError instanceof Prisma.PrismaClientKnownRequestError && (tokenError.code === 'P2021' || tokenError.code === 'P2022')) {
+        await withPrismaRetry(() => prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        }))
+
+        return NextResponse.json(
+          {
+            message: 'Account created successfully. Email verification is temporarily bypassed due to server configuration.',
+            userId: user.id,
+          },
+          { status: 201 }
+        )
+      }
+      throw tokenError
+    }
 
     // In development, email is auto-verified so skip the send
     if (process.env.NODE_ENV === 'development') {

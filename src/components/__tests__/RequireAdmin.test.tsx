@@ -46,7 +46,7 @@ describe('RequireAdmin', () => {
       </RequireAdmin>
     )
 
-    expect(mockReplace).toHaveBeenCalledWith('/login?callbackUrl=/admin')
+    expect(mockReplace).toHaveBeenCalledWith('/admin-login')
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
   })
 
