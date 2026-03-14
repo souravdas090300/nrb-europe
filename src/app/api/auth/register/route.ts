@@ -99,6 +99,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const emailVerificationEnabled =
+      process.env.NODE_ENV !== 'development' &&
+      Boolean(process.env.RESEND_API_KEY && process.env.NEXTAUTH_URL)
+
     // Hash with higher cost factor (12 rounds)
     const hashedPassword = await bcrypt.hash(password, 12)
 
@@ -110,9 +114,8 @@ export async function POST(request: NextRequest) {
           name,
           password: hashedPassword,
           role: 'subscriber',
-          // Auto-verify in development: Resend sandbox only sends to the account owner's email,
-          // so enforce email verification only when a verified sending domain is configured.
-          ...(process.env.NODE_ENV === 'development' && { emailVerified: new Date() }),
+          // Auto-verify unless email verification flow is fully configured.
+          ...(!emailVerificationEnabled && { emailVerified: new Date() }),
         },
         select: { id: true },
       }))
@@ -127,7 +130,14 @@ export async function POST(request: NextRequest) {
       throw createError
     }
 
-    // Generate verification token (still useful even in dev for future prod use)
+    if (!emailVerificationEnabled) {
+      return NextResponse.json(
+        { message: 'Account created successfully. You can now sign in.', userId: user.id },
+        { status: 201 }
+      )
+    }
+
+    // Generate verification token
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const expires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -156,14 +166,6 @@ export async function POST(request: NextRequest) {
         )
       }
       throw tokenError
-    }
-
-    // In development, email is auto-verified so skip the send
-    if (process.env.NODE_ENV === 'development') {
-      return NextResponse.json(
-        { message: 'Account created successfully. You can now sign in.', userId: user.id },
-        { status: 201 }
-      )
     }
 
     // Send verification email

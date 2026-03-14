@@ -83,8 +83,12 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        // Check if email is verified (skip in development — no sending domain configured)
-        if (process.env.NODE_ENV !== 'development' && !user.emailVerified) {
+        // Enforce verification only when email delivery is configured.
+        const emailVerificationEnabled =
+          process.env.NODE_ENV !== 'development' &&
+          Boolean(process.env.RESEND_API_KEY && process.env.NEXTAUTH_URL)
+
+        if (emailVerificationEnabled && !user.emailVerified) {
           throw new Error('Please verify your email before signing in. Check your inbox.')
         }
 

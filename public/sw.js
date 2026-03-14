@@ -72,8 +72,19 @@ self.addEventListener('fetch', function(event) {
             }
             // Show offline page for navigation requests
             if (event.request.mode === 'navigate') {
-              return cache.match('/offline')
+              return caches.match('/offline').then((offlineResponse) => {
+                return (
+                  offlineResponse ||
+                  new Response('Offline', {
+                    status: 503,
+                    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+                  })
+                )
+              })
             }
+
+            // For non-navigation requests, return a valid fallback response.
+            return new Response(null, { status: 504, statusText: 'Gateway Timeout' })
           })
         })
     })
