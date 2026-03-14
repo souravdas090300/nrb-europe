@@ -10,8 +10,13 @@ export default function RequireAdmin({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (status === 'loading') return
-    if (!session || session.user.role !== 'admin') {
-      router.replace('/')
+    if (!session) {
+      router.replace('/login?callbackUrl=/admin')
+      return
+    }
+
+    if (session.user.role !== 'admin') {
+      router.replace('/profile?error=admin_required')
     }
   }, [session, status, router])
 

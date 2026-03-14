@@ -4,8 +4,10 @@ import Login from '../../app/login/page'
 
 // Mock next-auth
 const mockSignIn = jest.fn()
+const mockGetSession = jest.fn()
 jest.mock('next-auth/react', () => ({
   signIn: (...args: any[]) => mockSignIn(...args),
+  getSession: () => mockGetSession(),
 }))
 
 // Mock next/navigation
@@ -30,6 +32,7 @@ jest.mock('next/link', () => {
 describe('Login Page', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockGetSession.mockResolvedValue({ user: { role: 'subscriber' } })
   })
 
   it('renders the login form', () => {
@@ -83,8 +86,9 @@ describe('Login Page', () => {
     })
   })
 
-  it('redirects to /admin on successful login', async () => {
+  it('redirects to /profile on successful non-admin login', async () => {
     mockSignIn.mockResolvedValue({ ok: true })
+    mockGetSession.mockResolvedValue({ user: { role: 'subscriber' } })
 
     render(<Login />)
 
@@ -97,7 +101,7 @@ describe('Login Page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign In' }))
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/admin')
+      expect(mockPush).toHaveBeenCalledWith('/profile')
     })
   })
 

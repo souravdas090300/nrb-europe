@@ -1,7 +1,8 @@
 'use client'
 
 import { signIn } from 'next-auth/react'
-import { useState, Suspense } from 'react'
+import { getSession } from 'next-auth/react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import * as Sentry from '@sentry/nextjs'
@@ -18,10 +19,12 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
   const oauthError = searchParams.get('error')
+  const callbackUrlParam = searchParams.get('callbackUrl')
+  const safeCallbackUrl = callbackUrlParam?.startsWith('/') ? callbackUrlParam : null
 
   // Lockout countdown timer
   const [lockoutSeconds, setLockoutSeconds] = useState(0)
-  useState(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       if (lockedUntil) {
         const remaining = Math.ceil((lockedUntil - Date.now()) / 1000)
@@ -35,7 +38,7 @@ function LoginForm() {
       }
     }, 1000)
     return () => clearInterval(interval)
-  })
+  }, [lockedUntil])
 
   const isLocked = lockedUntil !== null && Date.now() < lockedUntil
 
@@ -94,7 +97,18 @@ function LoginForm() {
         }
       } else if (res?.ok) {
         setFailedAttempts(0)
-        router.push('/admin')
+        const session = await getSession()
+        const role = session?.user?.role
+
+        if (safeCallbackUrl) {
+          if (safeCallbackUrl.startsWith('/admin') && role !== 'admin') {
+            router.push('/profile?error=admin_required')
+          } else {
+            router.push(safeCallbackUrl)
+          }
+        } else {
+          router.push(role === 'admin' ? '/admin' : '/profile')
+        }
       }
     } catch (err) {
       Sentry.captureException(err)
@@ -122,7 +136,9 @@ function LoginForm() {
 
         {oauthError && !error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
-            Google sign-in failed. Please try again or sign in with email.
+            {oauthError === 'admin_required'
+              ? 'This account does not have admin access.'
+              : 'Google sign-in failed. Please try again or sign in with email.'}
           </div>
         )}
 
@@ -193,7 +209,7 @@ function LoginForm() {
 
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: '/admin' })}
+          onClick={() => signIn('google', { callbackUrl: safeCallbackUrl ?? '/profile' })}
           className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition font-medium"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
