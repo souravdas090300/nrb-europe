@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
@@ -20,7 +21,6 @@ export const PATCH = withSecurity(
 
     const { name, slug, color, description, parentId, sortOrder, isActive } = data
 
-    // If slug is changing, check uniqueness
     if (slug) {
       const safeSlug = sanitizeSlug(slug)
       const existing = await prisma.category.findFirst({
@@ -31,7 +31,6 @@ export const PATCH = withSecurity(
       }
     }
 
-    // Prevent setting parent to self
     if (parentId === id) {
       return NextResponse.json({ error: 'Cannot set category as its own parent' }, { status: 400 })
     }
@@ -64,15 +63,46 @@ export const DELETE = withSecurity(
     const id = params?.id
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
 
-    // Reassign children to no parent
-    await prisma.category.updateMany({
-      where: { parentId: id },
-      data: { parentId: null },
+    const existingCategory = await prisma.category.findUnique({
+      where: { id },
+      select: { id: true, name: true },
     })
 
-    await prisma.category.delete({ where: { id } })
+    if (!existingCategory) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
 
-    return NextResponse.json({ success: true })
+    try {
+      await prisma.$transaction(async (tx) => {
+        await tx.category.updateMany({
+          where: { parentId: id },
+          data: { parentId: null },
+        })
+
+        await tx.category.delete({ where: { id } })
+      })
+
+      return NextResponse.json({ success: true })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2025') {
+          return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+        }
+
+        if (error.code === 'P2003') {
+          return NextResponse.json(
+            { error: 'This category is still referenced elsewhere and cannot be deleted yet.' },
+            { status: 409 }
+          )
+        }
+      }
+
+      console.error('Failed to delete category:', error)
+      return NextResponse.json(
+        { error: 'Failed to delete category. Please try again.' },
+        { status: 500 }
+      )
+    }
   },
   { rateLimit: 'admin', adminOnly: true }
 )
