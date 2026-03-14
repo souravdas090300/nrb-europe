@@ -5,7 +5,6 @@ function getCommand(command) {
 }
 
 function run(command, args) {
-  console.log(`> ${command} ${args.join(' ')}`);
   const result = spawnSync(getCommand(command), args, {
     stdio: 'inherit',
     env: process.env,
