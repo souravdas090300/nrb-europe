@@ -1,16 +1,16 @@
+import Link from 'next/link'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import { client } from '@/lib/sanity/client'
+import { prisma } from '@/lib/prisma'
 import HeroSection from '@/components/sections/HeroSection'
 import TrendingStories from '@/components/sections/TrendingStories'
 import VideoSection from '@/components/sections/VideoSection'
 import LatestStories from '@/components/sections/LatestStories'
 import Newsletter from '@/components/newsletter/Newsletter'
 
-// ISR: Revalidate every 60 seconds for fresh content
 export const revalidate = 60
 
-// GROQ Queries
 const heroArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[0..3] {
   _id,
   title,
@@ -55,20 +55,52 @@ const videoArticlesQuery = `*[_type == "post" && defined(videoUrl)] | order(publ
   publishedAt
 }`
 
+type HomeCategory = {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  children: Array<{
+    id: string
+    name: string
+    slug: string
+  }>
+}
+
 async function getHomeData() {
   try {
-    const [heroArticles, latestArticles, trendingArticles, videoArticles] = await Promise.all([
+    const [heroArticles, latestArticles, trendingArticles, videoArticles, homeCategories] = await Promise.all([
       client.fetch(heroArticlesQuery),
       client.fetch(latestArticlesQuery),
       client.fetch(trendingArticlesQuery),
       client.fetch(videoArticlesQuery),
+      prisma.category.findMany({
+        where: { isActive: true, parentId: null },
+        orderBy: { sortOrder: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          description: true,
+          children: {
+            where: { isActive: true },
+            orderBy: { sortOrder: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+            },
+          },
+        },
+      }),
     ])
 
     return {
       heroArticles,
       latestArticles,
       trendingArticles,
-      videoArticles
+      videoArticles,
+      homeCategories,
     }
   } catch (error) {
     console.error('Error fetching home data:', error)
@@ -76,7 +108,8 @@ async function getHomeData() {
       heroArticles: [],
       latestArticles: [],
       trendingArticles: [],
-      videoArticles: []
+      videoArticles: [],
+      homeCategories: [] as HomeCategory[],
     }
   }
 }
@@ -95,31 +128,69 @@ export default async function Home({
     heroArticles,
     latestArticles,
     trendingArticles,
-    videoArticles
+    videoArticles,
+    homeCategories,
   } = homeData
 
   return (
     <main className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Hero Section — featured stories at the top */}
       <HeroSection articles={heroArticles} lang={lang} dictionary={dictionary} />
 
-      {/* Latest Stories Grid */}
+      {homeCategories.length > 0 && (
+        <section className="border-y border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <h2 className="mb-3 border-l-4 border-red-600 pl-4 text-3xl font-bold text-gray-900 dark:text-white">
+              Browse Categories
+            </h2>
+            <p className="mb-8 text-gray-600 dark:text-gray-400">
+              Explore top-level topics and their subcategories from the latest site structure.
+            </p>
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+              {homeCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900"
+                >
+                  <Link
+                    href={`/${lang}/category/${category.slug}`}
+                    className="inline-flex items-center text-lg font-semibold text-gray-900 hover:text-red-600 dark:text-white"
+                  >
+                    {category.name}
+                  </Link>
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                    {category.description || 'News, analysis, and updates in this topic.'}
+                  </p>
+                  {category.children.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {category.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={`/${lang}/category/${child.slug}`}
+                          className="rounded-full border border-gray-300 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-gray-700 hover:text-red-600 dark:border-gray-700 dark:text-gray-200"
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="bg-white dark:bg-gray-950">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-8 border-l-4 border-red-600 pl-4">
+        <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+          <h2 className="mb-8 border-l-4 border-red-600 pl-4 text-3xl font-bold text-gray-900 dark:text-white">
             {dictionary.home.latestStories}
           </h2>
           <LatestStories articles={latestArticles} lang={lang} dictionary={dictionary} />
         </div>
       </section>
 
-      {/* Trending Stories */}
       <TrendingStories articles={trendingArticles} lang={lang} dictionary={dictionary} />
-
-      {/* Video Section */}
       <VideoSection videos={videoArticles} lang={lang} dictionary={dictionary} />
-
-      {/* Newsletter */}
       <Newsletter dictionary={dictionary} />
     </main>
   )

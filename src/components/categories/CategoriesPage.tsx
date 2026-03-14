@@ -35,7 +35,7 @@ const CategoriesPage = ({ lang }: CategoriesPageProps) => {
 
     const loadCategories = async () => {
       try {
-        const res = await fetch('/api/admin/categories', { cache: 'no-store' })
+        const res = await fetch('/api/categories', { cache: 'no-store' })
         if (!res.ok) throw new Error('Failed to fetch categories')
         const data = (await res.json()) as PublicCategory[]
         if (mounted) {

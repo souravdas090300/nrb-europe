@@ -65,7 +65,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
 
     const loadCategories = async () => {
       try {
-        const res = await fetch('/api/admin/categories', { cache: 'no-store' })
+        const res = await fetch('/api/categories', { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
         if (!mounted || !Array.isArray(data)) return
