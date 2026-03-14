@@ -195,7 +195,8 @@ export function withSecurity(handler: SecureHandler, options: SecurityOptions = 
         // 5. Admin role check
         if (adminOnly) {
           const user = session.user as { role?: string }
-          if (user.role !== 'ADMIN') {
+          const normalizedRole = (user.role || '').toLowerCase()
+          if (normalizedRole !== 'admin') {
             if (logEvents) {
               logSecurityEvent('FORBIDDEN_ACCESS', {
                 ip,
