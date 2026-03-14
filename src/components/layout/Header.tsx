@@ -223,15 +223,17 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   <p className={`font-medium text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>{session.user.name}</p>
                   <p className="text-xs text-gray-500">{session.user.email}</p>
                 </div>
-                <Link
-                  href="/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                    theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-                  }`}
-                >
-                  <User size={14} /> Dashboard
-                </Link>
+                {session.user.role === 'admin' && (
+                  <Link
+                    href="/admin"
+                    onClick={() => setMenuOpen(false)}
+                    className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                      theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+                    }`}
+                  >
+                    <User size={14} /> Dashboard
+                  </Link>
+                )}
                 {session.user.role === 'admin' && (
                   <Link
                     href="/admin/studio"

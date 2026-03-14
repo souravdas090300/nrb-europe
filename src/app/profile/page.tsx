@@ -158,7 +158,7 @@ export default function ProfilePage() {
             >
               Home
             </Link>
-            {['admin', 'editor'].includes(profile.role) && (
+            {profile.role === 'admin' && (
               <Link
                 href="/admin"
                 className="text-sm text-blue-600 hover:underline"
