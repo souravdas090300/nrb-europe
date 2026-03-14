@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import { categories } from '@/lib/constants'
+import { prisma } from '@/lib/prisma'
 import {
   generateCategoryStaticParams,
   generateCategoryMetadata,
@@ -38,14 +39,20 @@ export const revalidate = 60 // Revalidate every minute
 
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string, lang: Locale }> }) {
   const { slug, lang } = await params
-  const [sanityCategory, dictionary] = await Promise.all([
+  const [sanityCategory, dbCategory, dictionary] = await Promise.all([
     getCategoryBySlug(slug),
+    prisma.category.findFirst({
+      where: { slug, isActive: true },
+      select: { name: true, description: true },
+    }),
     getDictionary(lang),
   ])
 
   // Fallback to constants if the category doesn't exist in Sanity yet
   const knownCategory = categories.find((c) => c.slug === slug)
-  const category = sanityCategory || (knownCategory ? { title: knownCategory.name, description: null } : null)
+  const category = sanityCategory ||
+    (dbCategory ? { title: dbCategory.name, description: dbCategory.description } : null) ||
+    (knownCategory ? { title: knownCategory.name, description: null } : null)
 
   if (!category) {
     // Truly unknown category — not in Sanity or constants

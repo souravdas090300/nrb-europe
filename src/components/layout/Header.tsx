@@ -22,16 +22,23 @@ import { useSession, signOut } from 'next-auth/react'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
 import { useTheme } from '../ui/ThemeProvider'
 import { Locale } from '@/lib/i18n-config'
-import { categories } from '@/lib/constants'
+import { categories as fallbackCategories } from '@/lib/constants'
 import NrbLogo from '../ui/NrbLogo'
 
 /** Category slugs that are shown only in the hamburger menu (not the top nav bar). */
 const HAMBURGER_SLUGS = new Set(['jobs', 'travel'])
 
+type NavCategory = {
+  slug: string
+  name: string
+  parentId?: string | null
+}
+
 const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [categories, setCategories] = useState<NavCategory[]>(fallbackCategories)
   const { theme, toggleTheme } = useTheme()
   const [currentDate, setCurrentDate] = useState('')
   const { data: session } = useSession()
@@ -53,11 +60,44 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
     )
   }, [])
 
+  useEffect(() => {
+    let mounted = true
+
+    const loadCategories = async () => {
+      try {
+        const res = await fetch('/api/admin/categories', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json()
+        if (!mounted || !Array.isArray(data)) return
+
+        const normalized: NavCategory[] = data
+          .map((cat: any) => ({
+            slug: String(cat.slug || ''),
+            name: String(cat.name || ''),
+            parentId: cat.parentId || null,
+          }))
+          .filter((cat) => cat.slug && cat.name)
+
+        if (normalized.length > 0) {
+          setCategories(normalized)
+        }
+      } catch {
+        // Keep fallback categories when the API is unavailable.
+      }
+    }
+
+    loadCategories()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const getCatLabel = (cat: { slug: string; name: string }) =>
     dictionary?.categories?.[cat.slug] || dictionary?.nav?.[cat.slug] || cat.name
 
-  const navCategories = categories.filter((c) => !HAMBURGER_SLUGS.has(c.slug))
-  const hamburgerCategories = categories.filter((c) => HAMBURGER_SLUGS.has(c.slug))
+  const topLevelCategories = categories.filter((c) => !c.parentId)
+  const navCategories = topLevelCategories.filter((c) => !HAMBURGER_SLUGS.has(c.slug))
+  const hamburgerCategories = topLevelCategories.filter((c) => HAMBURGER_SLUGS.has(c.slug))
 
   const linkClass = `shrink-0 text-[12px] font-bold uppercase tracking-wide no-underline whitespace-nowrap hover:text-red-600 ${
     theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
@@ -276,7 +316,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
             )}
             <hr className={`my-1 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
             {/* All categories in hamburger menu */}
-            {categories.map((cat) => (
+            {[...navCategories, ...hamburgerCategories].map((cat) => (
               <Link
                 key={cat.slug}
                 href={`/${lang}/category/${cat.slug}`}
