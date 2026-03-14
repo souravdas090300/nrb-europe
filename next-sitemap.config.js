@@ -4,7 +4,25 @@ module.exports = {
   generateRobotsTxt: false,       // We already have src/app/robots.ts
   generateIndexSitemap: false,
   outDir: './public',
-  exclude: ['/admin/*', '/login', '/studio/*', '/api/*'],
+  exclude: [
+    '/admin',
+    '/admin/*',
+    '/admin-login',
+    '/api/*',
+    '/apple-icon.png',
+    '/forgot-password',
+    '/icon.png',
+    '/login',
+    '/news-sitemap.xml',
+    '/profile',
+    '/register',
+    '/reset-password',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/studio/*',
+    '/subscribe/success',
+    '/verify',
+  ],
   additionalPaths: async (config) => {
     const paths = []
 
