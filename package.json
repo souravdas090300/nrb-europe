@@ -23,8 +23,6 @@
     "db:push": "dotenv -e .env.dev -- npx prisma db push",
     "db:studio": "dotenv -e .env.dev -- npx prisma studio",
     "db:migrate:prod": "dotenv -e .env.prod -- npx prisma migrate deploy",
-    "check:db:dev": "dotenv -e .env.dev -- tsx scripts/check-db.ts",
-    "check:db:prod": "dotenv -e .env.prod -- tsx scripts/check-db.ts",
     "deploy-schema": "dotenv -e .env.dev -- npx sanity schema deploy",
     "seo-audit": "node scripts/seo-audit.js"
   },
