@@ -1,21 +1,3 @@
-/**
- * @file POST /api/auth/register — User registration endpoint
- *
- * Flow:
- *  1. Rate-limit check (10 attempts / 15 min per IP)
- *  2. Input sanitisation & validation (email, name, password strength)
- *  3. Check for existing user (generic error to prevent email enumeration)
- *  4. Hash password with bcrypt (12 rounds)
- *  5. Create User record in PostgreSQL
- *  6. Generate 32-byte verification token (24h expiry)
- *  7. Send verification email via Resend
- *
- * If the email send fails, the user is still created and a 201 is returned
- * with an informative message so the user can request a new verification.
- *
- * @security Rate-limited via `authLimiter`, input sanitised via `sanitizeEmail`/`sanitizeString`
- */
-
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import * as Sentry from '@sentry/nextjs'
@@ -23,11 +5,9 @@ import { isTransientPrismaError } from '@/lib/prisma-retry'
 import { authLimiter } from '@/lib/security/rate-limit'
 import { registerAccount } from '@/lib/register-account'
 
-// Prisma is not supported in Edge runtime; force Node.js on Vercel.
 export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
-  // Rate limit: 10 registration attempts per 15 minutes per IP
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
   const rateLimitResult = authLimiter.check(ip)
   if (!rateLimitResult.success) {
@@ -40,7 +20,7 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { email?: unknown; name?: unknown; password?: unknown }
+  let body: { email?: unknown; name?: unknown; password?: unknown; adminSetupCode?: unknown }
   try {
     body = await request.json()
   } catch {
@@ -52,13 +32,14 @@ export async function POST(request: NextRequest) {
       email: body.email,
       name: body.name,
       password: body.password,
-      role: 'subscriber',
+      role: 'admin',
+      adminSetupCode: body.adminSetupCode,
     })
 
     return NextResponse.json(result.body, { status: result.status })
   } catch (error: any) {
     if (isTransientPrismaError(error)) {
-      console.error('Prisma initialization error during registration:', error)
+      console.error('Prisma initialization error during admin registration:', error)
       return NextResponse.json(
         { error: 'Authentication service is temporarily unavailable. Please try again later.' },
         { status: 503 }
@@ -66,7 +47,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (error instanceof Prisma.PrismaClientKnownRequestError && (error.code === 'P2021' || error.code === 'P2022')) {
-      console.error('Prisma schema mismatch during registration:', error)
+      console.error('Prisma schema mismatch during admin registration:', error)
       return NextResponse.json(
         { error: 'Service configuration issue detected. Please contact support.' },
         { status: 503 }
@@ -74,9 +55,9 @@ export async function POST(request: NextRequest) {
     }
 
     Sentry.captureException(error)
-    console.error('Registration error:', error)
+    console.error('Admin registration error:', error)
     return NextResponse.json(
-      { error: 'Failed to create account. Please try again.' },
+      { error: 'Failed to create admin account. Please try again.' },
       { status: 500 }
     )
   }

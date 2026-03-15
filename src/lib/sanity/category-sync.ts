@@ -43,6 +43,8 @@ type SyncCategoryInput = {
   parentId?: string | null
   isActive?: boolean
   sortOrder?: number
+  nameTranslations?: unknown
+  descriptionTranslations?: unknown
 }
 
 export async function syncCategoryToSanity(category: SyncCategoryInput) {
@@ -58,12 +60,26 @@ export async function syncCategoryToSanity(category: SyncCategoryInput) {
       }
     : undefined
 
+  const nameTranslations = category.nameTranslations && typeof category.nameTranslations === 'object'
+    ? Object.fromEntries(
+        Object.entries(category.nameTranslations).filter(([, v]) => typeof v === 'string' && v.trim())
+      )
+    : undefined
+
+  const descriptionTranslations = category.descriptionTranslations && typeof category.descriptionTranslations === 'object'
+    ? Object.fromEntries(
+        Object.entries(category.descriptionTranslations).filter(([, v]) => typeof v === 'string' && v.trim())
+      )
+    : undefined
+
   await sanityClient.createOrReplace({
     _id: docId,
     _type: 'category',
     title: category.name,
     slug: { _type: 'slug', current: category.slug },
     description: category.description || '',
+    ...(nameTranslations && Object.keys(nameTranslations).length > 0 && { nameTranslations }),
+    ...(descriptionTranslations && Object.keys(descriptionTranslations).length > 0 && { descriptionTranslations }),
     color: toSanityColor(category.color),
     parent: parentRef,
     isActive: category.isActive ?? true,

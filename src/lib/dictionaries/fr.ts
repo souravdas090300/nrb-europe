@@ -41,6 +41,9 @@ export default {
   home: {
     title: 'Derniers Articles',
     description: 'Actualités et articles d\'Europe',
+    browseCategories: 'Parcourir les catégories',
+    browseCategoriesDescription: 'Explorez les sujets principaux et leurs sous-catégories à partir de la structure la plus récente du site.',
+    categoryFallbackDescription: 'Actualités, analyses et mises à jour sur ce sujet.',
     breakingNews: 'Dernières Nouvelles',
     topStory: 'Histoire Principale',
     latestNews: 'Dernières Actualités',

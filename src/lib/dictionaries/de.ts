@@ -41,6 +41,9 @@ export default {
   home: {
     title: 'Neueste Artikel',
     description: 'Nachrichten und Artikel aus Europa',
+    browseCategories: 'Kategorien entdecken',
+    browseCategoriesDescription: 'Entdecken Sie Hauptthemen und ihre Unterkategorien aus der neuesten Seitenstruktur.',
+    categoryFallbackDescription: 'Nachrichten, Analysen und aktuelle Entwicklungen zu diesem Thema.',
     breakingNews: 'Eilmeldungen',
     topStory: 'Hauptmeldung',
     latestNews: 'Neueste Nachrichten',

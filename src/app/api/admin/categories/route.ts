@@ -1,7 +1,9 @@
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
+import { normalizeCategoryTranslations } from '@/lib/category-localization'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 import { syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
@@ -41,14 +43,15 @@ export async function GET() {
 export const POST = withSecurity(
   async (request: NextRequest) => {
     const { data, error } = await safeParseBody<{
-      name: string; slug: string; color?: string; description?: string; parentId?: string; sortOrder?: number
+      name: string; slug: string; color?: string; description?: string; parentId?: string; sortOrder?: number;
+      nameTranslations?: Record<string, string>; descriptionTranslations?: Record<string, string>
     }>(request)
 
     if (error || !data) {
       return NextResponse.json({ error: error || 'Invalid body' }, { status: 400 })
     }
 
-    const { name, slug, color, description, parentId, sortOrder } = data
+    const { name, slug, color, description, parentId, sortOrder, nameTranslations, descriptionTranslations } = data
 
     if (!name || !slug) {
       return NextResponse.json({ error: 'Name and slug are required' }, { status: 400 })
@@ -78,9 +81,11 @@ export const POST = withSecurity(
     const category = await prisma.category.create({
       data: {
         name,
+        nameTranslations: normalizeCategoryTranslations(nameTranslations) ?? Prisma.JsonNull,
         slug: safeSlug,
         color: color || 'bg-gray-100 text-gray-800',
         description: description || null,
+        descriptionTranslations: normalizeCategoryTranslations(descriptionTranslations) ?? Prisma.JsonNull,
         parentId: parentCategory?.id || null,
         sortOrder: sortOrder ?? 0,
       },

@@ -73,7 +73,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
 
     const loadCategories = async () => {
       try {
-        const res = await fetch('/api/categories', { cache: 'no-store' })
+        const res = await fetch(`/api/categories?lang=${lang}`, { cache: 'no-store' })
         if (!res.ok) return
         const data = await res.json()
         if (!mounted || !Array.isArray(data)) return
@@ -106,10 +106,10 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
     return () => {
       mounted = false
     }
-  }, [pathname])
+  }, [lang, pathname])
 
   const getCatLabel = (cat: { slug: string; name: string }) =>
-    dictionary?.categories?.[cat.slug] || dictionary?.nav?.[cat.slug] || cat.name
+    cat.name || dictionary?.categories?.[cat.slug] || dictionary?.nav?.[cat.slug] || cat.slug
 
   // API now returns tree (rootCategories); all returned items are top-level
   const topLevelCategories = categories.filter((c) => !c.parentId)
@@ -204,7 +204,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                           theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
                         }`}
                       >
-                        {dictionary?.categories?.[child.slug] || child.name}
+                        {child.name || dictionary?.categories?.[child.slug] || child.slug}
                       </Link>
                     ))}
                   </div>

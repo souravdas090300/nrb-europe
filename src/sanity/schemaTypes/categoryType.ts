@@ -62,6 +62,30 @@ export const categoryType = defineType({
       initialValue: 'blue',
     }),
     defineField({
+      name: 'nameTranslations',
+      title: 'Name Translations',
+      description: 'Localized category names (auto-synced from admin panel).',
+      type: 'object',
+      fields: [
+        defineField({name: 'bn', title: 'Bengali', type: 'string'}),
+        defineField({name: 'es', title: 'Spanish', type: 'string'}),
+        defineField({name: 'de', title: 'German', type: 'string'}),
+        defineField({name: 'fr', title: 'French', type: 'string'}),
+      ],
+    }),
+    defineField({
+      name: 'descriptionTranslations',
+      title: 'Description Translations',
+      description: 'Localized category descriptions (auto-synced from admin panel).',
+      type: 'object',
+      fields: [
+        defineField({name: 'bn', title: 'Bengali', type: 'text', rows: 3}),
+        defineField({name: 'es', title: 'Spanish', type: 'text', rows: 3}),
+        defineField({name: 'de', title: 'German', type: 'text', rows: 3}),
+        defineField({name: 'fr', title: 'French', type: 'text', rows: 3}),
+      ],
+    }),
+    defineField({
       name: 'isActive',
       title: 'Active',
       type: 'boolean',

@@ -1,9 +1,33 @@
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity } from '@/lib/security'
 import { categories as defaultCategories } from '@/lib/constants'
+import { CATEGORY_TRANSLATION_LOCALES } from '@/lib/category-localization'
+import bn from '@/lib/dictionaries/bn'
+import de from '@/lib/dictionaries/de'
+import es from '@/lib/dictionaries/es'
+import fr from '@/lib/dictionaries/fr'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 import { syncCategoryToSanity } from '@/lib/sanity/category-sync'
+
+const CATEGORY_DICTIONARIES = {
+  bn: bn.categories,
+  es: es.categories,
+  de: de.categories,
+  fr: fr.categories,
+} as const
+
+function buildSeedTranslations(slug: string) {
+  const entries = CATEGORY_TRANSLATION_LOCALES
+    .map((locale) => {
+      const value = CATEGORY_DICTIONARIES[locale]?.[slug as keyof typeof CATEGORY_DICTIONARIES[typeof locale]]
+      return [locale, value] as const
+    })
+    .filter((entry): entry is readonly [typeof CATEGORY_TRANSLATION_LOCALES[number], string] => Boolean(entry[1]))
+
+  return entries.length > 0 ? Object.fromEntries(entries) : null
+}
 
 // POST — seed categories from constants (admin only, secured, idempotent)
 export const POST = withSecurity(
@@ -21,6 +45,7 @@ export const POST = withSecurity(
       const createdCategory = await prisma.category.create({
         data: {
           name: cat.name,
+          nameTranslations: buildSeedTranslations(cat.slug) ?? Prisma.JsonNull,
           slug: cat.slug,
           color: cat.color,
           sortOrder: i,

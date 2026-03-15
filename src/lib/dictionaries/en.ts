@@ -41,6 +41,9 @@ export default {
   home: {
     title: 'Latest Articles',
     description: 'News and articles from Europe',
+    browseCategories: 'Browse Categories',
+    browseCategoriesDescription: 'Explore top-level topics and their subcategories from the latest site structure.',
+    categoryFallbackDescription: 'News, analysis, and updates in this topic.',
     breakingNews: 'Breaking News',
     topStory: 'Top Story',
     latestNews: 'Latest News',

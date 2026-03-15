@@ -62,7 +62,7 @@ describe('RequireAdmin', () => {
       </RequireAdmin>
     )
 
-    expect(mockReplace).toHaveBeenCalledWith('/login?error=admin_required')
+    expect(mockReplace).toHaveBeenCalledWith('/admin-login?error=admin_required')
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
   })
 

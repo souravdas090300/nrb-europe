@@ -19,7 +19,7 @@ export default async function AdminLayout({
   }
 
   if (session.user.role !== 'admin') {
-    redirect('/login?error=admin_required')
+    redirect('/admin-login?error=admin_required')
   }
 
   return (

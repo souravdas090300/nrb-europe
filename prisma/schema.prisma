@@ -126,9 +126,11 @@ model NewsletterSubscriber {
 model Category {
   id          String     @id @default(cuid())
   name        String
+  nameTranslations Json?
   slug        String     @unique
   color       String     @default("bg-gray-100 text-gray-800")
   description String?
+  descriptionTranslations Json?
   parentId    String?
   parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[] @relation("CategoryToCategory")

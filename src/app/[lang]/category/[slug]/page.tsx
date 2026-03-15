@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
+import { getLocalizedCategoryValue, getLocalizedOptionalCategoryValue } from '@/lib/category-localization'
 import { categories } from '@/lib/constants'
 import { prisma } from '@/lib/prisma'
 import {
@@ -44,29 +45,38 @@ export async function generateStaticParams() {
 
 // Generate metadata — with DB category fallback for admin-created categories
 export async function generateMetadata({ params }: { params: Promise<{ slug: string, lang: string }> }): Promise<Metadata> {
-  const { slug } = await params
+  const { slug, lang } = await params
   const sanityMeta = await generateCategoryMetadata(slug)
-  // If Sanity found the category, use its metadata
-  if (sanityMeta.title !== 'Category Not Found - NRB Europe') {
-    return sanityMeta
-  }
   // Fallback: check DB for admin-created category
   if (process.env.DATABASE_URL) {
     try {
       const dbCat = await prisma.category.findFirst({
         where: { slug, isActive: true },
-        select: { name: true, description: true },
+        select: { name: true, nameTranslations: true, description: true, descriptionTranslations: true },
       })
       if (dbCat) {
+        const localizedName = getLocalizedCategoryValue(dbCat.name, dbCat.nameTranslations, lang as Locale)
+        const localizedDescription = getLocalizedOptionalCategoryValue(
+          dbCat.description,
+          dbCat.descriptionTranslations,
+          lang as Locale
+        )
+
         return {
-          title: `${dbCat.name} News - NRB Europe`,
-          description: dbCat.description || `Latest ${dbCat.name} news for NRBs in Europe`,
+          title: `${localizedName} News - NRB Europe`,
+          description: localizedDescription || `Latest ${localizedName} news for NRBs in Europe`,
         }
       }
     } catch {
       // Ignore DB errors
     }
   }
+
+  // If Sanity found the category, use its metadata
+  if (sanityMeta.title !== 'Category Not Found - NRB Europe') {
+    return sanityMeta
+  }
+
   return sanityMeta
 }
 
@@ -75,8 +85,10 @@ export const revalidate = 60 // Revalidate every minute
 type DbCategoryInfo = {
   name: string
   description: string | null
-  parent: { name: string; slug: string } | null
-  children: Array<{ name: string; slug: string }>
+  nameTranslations: unknown
+  descriptionTranslations: unknown
+  parent: { name: string; slug: string; nameTranslations: unknown } | null
+  children: Array<{ name: string; slug: string; nameTranslations: unknown }>
 }
 
 async function getDbCategoryBySlug(slug: string): Promise<DbCategoryInfo | null> {
@@ -90,10 +102,12 @@ async function getDbCategoryBySlug(slug: string): Promise<DbCategoryInfo | null>
       select: {
         name: true,
         description: true,
-        parent: { select: { name: true, slug: true } },
+        nameTranslations: true,
+        descriptionTranslations: true,
+        parent: { select: { name: true, slug: true, nameTranslations: true } },
         children: {
           where: { isActive: true },
-          select: { name: true, slug: true },
+          select: { name: true, slug: true, nameTranslations: true },
           orderBy: { sortOrder: 'asc' },
         },
       },
@@ -112,10 +126,26 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     getDictionary(lang),
   ])
 
+  const localizedDbCategory = dbCategory
+    ? {
+        name: getLocalizedCategoryValue(dbCategory.name, dbCategory.nameTranslations, lang),
+        description: getLocalizedOptionalCategoryValue(dbCategory.description, dbCategory.descriptionTranslations, lang),
+        parent: dbCategory.parent
+          ? {
+              ...dbCategory.parent,
+              name: getLocalizedCategoryValue(dbCategory.parent.name, dbCategory.parent.nameTranslations, lang),
+            }
+          : null,
+        children: dbCategory.children.map((child) => ({
+          ...child,
+          name: getLocalizedCategoryValue(child.name, child.nameTranslations, lang),
+        })),
+      }
+    : null
+
   // Fallback to constants if the category doesn't exist in Sanity yet
   const knownCategory = categories.find((c) => c.slug === slug)
-  const category = sanityCategory ||
-    (dbCategory ? { title: dbCategory.name, description: dbCategory.description } : null) ||
+  const category = localizedDbCategory ? { title: localizedDbCategory.name, description: localizedDbCategory.description } : sanityCategory ||
     (knownCategory ? { title: knownCategory.name, description: null } : null)
 
   if (!category) {
@@ -124,8 +154,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     notFound()
   }
 
-  const parentCategory = dbCategory?.parent ?? null
-  const subcategories = dbCategory?.children ?? []
+  const parentCategory = localizedDbCategory?.parent ?? null
+  const subcategories = localizedDbCategory?.children ?? []
 
   // Fetch articles that reference this category
   const articles = await getCategoryArticles(slug)

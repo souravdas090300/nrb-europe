@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import { client } from '@/lib/sanity/client'
+import { getLocalizedCategoryValue, getLocalizedOptionalCategoryValue } from '@/lib/category-localization'
 import { prisma } from '@/lib/prisma'
 import HeroSection from '@/components/sections/HeroSection'
 import TrendingStories from '@/components/sections/TrendingStories'
@@ -71,7 +72,7 @@ type HomeCategory = {
   }>
 }
 
-async function getHomeData() {
+async function getHomeData(lang: Locale) {
   try {
     const [heroArticles, latestArticles, trendingArticles, videoArticles] = await Promise.all([
       client.fetch(heroArticlesQuery),
@@ -89,14 +90,26 @@ async function getHomeData() {
           select: {
             id: true,
             name: true,
+            nameTranslations: true,
             slug: true,
             description: true,
+            descriptionTranslations: true,
             parentId: true,
             sortOrder: true,
           },
         })
 
-        const byId = new Map(flatCategories.map((category) => [category.id, { ...category, children: [] as HomeCategory['children'] }]))
+        const localizedCategories = flatCategories.map((category) => ({
+          id: category.id,
+          name: getLocalizedCategoryValue(category.name, category.nameTranslations, lang),
+          slug: category.slug,
+          description: getLocalizedOptionalCategoryValue(category.description, category.descriptionTranslations, lang),
+          parentId: category.parentId,
+          sortOrder: category.sortOrder,
+          children: [] as HomeCategory['children'],
+        }))
+
+        const byId = new Map(localizedCategories.map((category) => [category.id, category]))
         const roots: HomeCategory[] = []
 
         for (const category of Array.from(byId.values())) {
@@ -147,7 +160,7 @@ export default async function Home({
   const { lang } = await _params
   const [dictionary, homeData] = await Promise.all([
     getDictionary(lang),
-    getHomeData(),
+    getHomeData(lang),
   ])
   const {
     heroArticles,
@@ -165,10 +178,10 @@ export default async function Home({
         <section className="border-y border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <h2 className="mb-3 border-l-4 border-red-600 pl-4 text-3xl font-bold text-gray-900 dark:text-white">
-              Browse Categories
+              {dictionary.home.browseCategories}
             </h2>
             <p className="mb-8 text-gray-600 dark:text-gray-400">
-              Explore top-level topics and their subcategories from the latest site structure.
+              {dictionary.home.browseCategoriesDescription}
             </p>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
               {homeCategories.map((category) => (
@@ -183,7 +196,7 @@ export default async function Home({
                     {category.name}
                   </Link>
                   <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-                    {category.description || 'News, analysis, and updates in this topic.'}
+                    {category.description || dictionary.home.categoryFallbackDescription}
                   </p>
                   {category.children.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">

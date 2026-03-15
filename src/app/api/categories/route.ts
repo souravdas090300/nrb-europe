@@ -1,19 +1,24 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Locale } from '@/lib/i18n-config'
+import { getLocalizedCategoryValue, getLocalizedOptionalCategoryValue } from '@/lib/category-localization'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const locale = (request.nextUrl.searchParams.get('lang') || 'en') as Locale
     const categories = await prisma.category.findMany({
       where: { isActive: true },
       select: {
         id: true,
         name: true,
+        nameTranslations: true,
         slug: true,
         color: true,
         description: true,
+        descriptionTranslations: true,
         parentId: true,
         sortOrder: true,
         isActive: true,
@@ -34,7 +39,20 @@ export async function GET() {
     }
 
     const byId = new Map<string, CatNode>(
-      categories.map((c) => [c.id, { ...c, children: [] }])
+      categories.map((c) => [
+        c.id,
+        {
+          id: c.id,
+          name: getLocalizedCategoryValue(c.name, c.nameTranslations, locale),
+          slug: c.slug,
+          color: c.color,
+          description: getLocalizedOptionalCategoryValue(c.description, c.descriptionTranslations, locale),
+          parentId: c.parentId,
+          sortOrder: c.sortOrder,
+          isActive: c.isActive,
+          children: [],
+        },
+      ])
     )
 
     const rootCategories: CatNode[] = []

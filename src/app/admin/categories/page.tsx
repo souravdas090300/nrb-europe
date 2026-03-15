@@ -1,13 +1,23 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { CATEGORY_TRANSLATION_LOCALES, type CategoryTranslationMap } from '@/lib/category-localization'
+
+const LOCALE_LABELS: Record<string, string> = {
+  bn: 'Bengali',
+  es: 'Spanish',
+  de: 'German',
+  fr: 'French',
+}
 
 interface Category {
   id: string
   name: string
+  nameTranslations?: CategoryTranslationMap | null
   slug: string
   color: string
   description: string | null
+  descriptionTranslations?: CategoryTranslationMap | null
   parentId: string | null
   parent: { id: string; name: string; slug: string } | null
   children: Category[]
@@ -46,6 +56,8 @@ export default function AdminCategoriesPage() {
     slug: '',
     color: 'bg-gray-100 text-gray-800',
     description: '',
+    nameTranslations: {} as CategoryTranslationMap,
+    descriptionTranslations: {} as CategoryTranslationMap,
     parentId: '',
     sortOrder: 0,
   })
@@ -123,7 +135,16 @@ export default function AdminCategoriesPage() {
   }
 
   const resetForm = () => {
-    setFormData({ name: '', slug: '', color: 'bg-gray-100 text-gray-800', description: '', parentId: '', sortOrder: 0 })
+    setFormData({
+      name: '',
+      slug: '',
+      color: 'bg-gray-100 text-gray-800',
+      description: '',
+      nameTranslations: {},
+      descriptionTranslations: {},
+      parentId: '',
+      sortOrder: 0,
+    })
     setEditingId(null)
     setShowForm(false)
   }
@@ -169,6 +190,8 @@ export default function AdminCategoriesPage() {
       slug: cat.slug,
       color: cat.color,
       description: cat.description || '',
+      nameTranslations: cat.nameTranslations || {},
+      descriptionTranslations: cat.descriptionTranslations || {},
       parentId: cat.parentId || '',
       sortOrder: cat.sortOrder,
     })
@@ -336,6 +359,51 @@ export default function AdminCategoriesPage() {
                 className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="Optional description"
               />
+            </div>
+            <div className="md:col-span-2 rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h3 className="text-sm font-semibold dark:text-white">Translations</h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                These localized names and descriptions are used on the homepage, header navigation, and category pages.
+              </p>
+              <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {CATEGORY_TRANSLATION_LOCALES.map((locale) => (
+                  <div key={locale} className="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+                    <p className="mb-3 text-sm font-medium dark:text-gray-300">{LOCALE_LABELS[locale] || locale.toUpperCase()}</p>
+                    <div>
+                      <label className="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Name</label>
+                      <input
+                        type="text"
+                        value={formData.nameTranslations[locale] || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          nameTranslations: {
+                            ...prev.nameTranslations,
+                            [locale]: e.target.value,
+                          },
+                        }))}
+                        className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder={`Translated ${locale} name`}
+                      />
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-xs font-medium mb-1 text-gray-600 dark:text-gray-400">Description</label>
+                      <textarea
+                        value={formData.descriptionTranslations[locale] || ''}
+                        onChange={(e) => setFormData((prev) => ({
+                          ...prev,
+                          descriptionTranslations: {
+                            ...prev.descriptionTranslations,
+                            [locale]: e.target.value,
+                          },
+                        }))}
+                        rows={2}
+                        className="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                        placeholder={`Translated ${locale} description`}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="md:col-span-2 flex gap-2">
               <button

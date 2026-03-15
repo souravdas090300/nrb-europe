@@ -41,6 +41,9 @@ export default {
   home: {
     title: 'সর্বশেষ নিবন্ধ',
     description: 'ইউরোপ থেকে সংবাদ এবং নিবন্ধ',
+    browseCategories: 'বিভাগসমূহ দেখুন',
+    browseCategoriesDescription: 'সাইটের সর্বশেষ কাঠামো থেকে প্রধান বিষয় ও তাদের উপবিভাগগুলো অন্বেষণ করুন।',
+    categoryFallbackDescription: 'এই বিষয়ে সংবাদ, বিশ্লেষণ এবং হালনাগাদ।',
     breakingNews: 'ব্রেকিং নিউজ',
     topStory: 'শীর্ষ সংবাদ',
     latestNews: 'সর্বশেষ সংবাদ',

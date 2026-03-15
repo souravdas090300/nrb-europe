@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
+import { normalizeCategoryTranslations } from '@/lib/category-localization'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 import { deleteCategoryFromSanity, syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
@@ -23,14 +24,15 @@ export const PATCH = withSecurity(
 
     const { data, error } = await safeParseBody<{
       name?: string; slug?: string; color?: string; description?: string;
-      parentId?: string; sortOrder?: number; isActive?: boolean
+      parentId?: string; sortOrder?: number; isActive?: boolean;
+      nameTranslations?: Record<string, string>; descriptionTranslations?: Record<string, string>
     }>(request)
 
     if (error || !data) {
       return NextResponse.json({ error: error || 'Invalid body' }, { status: 400 })
     }
 
-    const { name, slug, color, description, parentId, sortOrder, isActive } = data
+    const { name, slug, color, description, parentId, sortOrder, isActive, nameTranslations, descriptionTranslations } = data
     const normalizedParentId = typeof parentId === 'string' ? parentId.trim() : undefined
 
     if (slug) {
@@ -62,10 +64,20 @@ export const PATCH = withSecurity(
       where: { id },
       data: {
         ...(name !== undefined && { name }),
+        ...(nameTranslations !== undefined && {
+          nameTranslations: normalizeCategoryTranslations(nameTranslations) ?? Prisma.JsonNull,
+        }),
         ...(slug !== undefined && { slug: sanitizeSlug(slug) }),
         ...(color !== undefined && { color }),
         ...(description !== undefined && { description }),
-        ...(parentId !== undefined && { parentId: normalizedParentId || null }),
+        ...(descriptionTranslations !== undefined && {
+          descriptionTranslations: normalizeCategoryTranslations(descriptionTranslations) ?? Prisma.JsonNull,
+        }),
+        ...(parentId !== undefined && {
+          parent: normalizedParentId
+            ? { connect: { id: normalizedParentId } }
+            : { disconnect: true },
+        }),
         ...(sortOrder !== undefined && { sortOrder }),
         ...(isActive !== undefined && { isActive }),
       },

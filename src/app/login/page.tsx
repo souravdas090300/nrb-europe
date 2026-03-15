@@ -19,9 +19,6 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const justRegistered = searchParams.get('registered') === 'true'
   const oauthError = searchParams.get('error')
-  const isAdminLogin = searchParams.get('admin') === 'true'
-  const callbackUrlParam = searchParams.get('callbackUrl')
-  const safeCallbackUrl = callbackUrlParam?.startsWith('/') ? callbackUrlParam : null
 
   // Lockout countdown timer
   const [lockoutSeconds, setLockoutSeconds] = useState(0)
@@ -100,22 +97,7 @@ function LoginForm() {
         setFailedAttempts(0)
         const session = await getSession()
         const role = session?.user?.role
-
-        if (isAdminLogin && role !== 'admin') {
-          await signOut({ redirect: false })
-          setError('Only admin accounts can sign in here.')
-          return
-        }
-
-        if (safeCallbackUrl) {
-          if (safeCallbackUrl.startsWith('/admin') && role !== 'admin') {
-            router.push('/login?error=admin_required')
-          } else {
-            router.push(safeCallbackUrl)
-          }
-        } else {
-          router.push(role === 'admin' ? '/admin' : '/profile')
-        }
+        router.push(role === 'admin' ? '/admin' : '/profile')
       }
     } catch (err) {
       Sentry.captureException(err)
@@ -134,7 +116,7 @@ function LoginForm() {
       </div>
       <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-96">
         <h1 className="text-2xl font-bold mb-6 text-center text-gray-900 dark:text-white">
-          {isAdminLogin ? 'Admin Sign In' : 'Sign In'}
+          Sign In
         </h1>
 
         {justRegistered && (
@@ -145,9 +127,7 @@ function LoginForm() {
 
         {oauthError && !error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-sm">
-            {oauthError === 'admin_required'
-              ? 'This account does not have admin access.'
-              : 'Google sign-in failed. Please try again or sign in with email.'}
+            {'Google sign-in failed. Please try again or sign in with email.'}
           </div>
         )}
 
@@ -218,7 +198,7 @@ function LoginForm() {
 
         <button
           type="button"
-          onClick={() => signIn('google', { callbackUrl: safeCallbackUrl ?? (isAdminLogin ? '/admin' : '/profile') })}
+          onClick={() => signIn('google', { callbackUrl: '/profile' })}
           className="w-full flex items-center justify-center gap-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-2 rounded hover:bg-gray-50 dark:hover:bg-gray-600 transition font-medium"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -230,27 +210,14 @@ function LoginForm() {
           Sign in with Google
         </button>
 
-        {!isAdminLogin && (
-          <div className="mt-4">
-            <Link
-              href="/register"
-              className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
-            >
-              Create Account
-            </Link>
-          </div>
-        )}
-
-        {isAdminLogin && (
-          <div className="mt-4">
-            <Link
-              href="/register?admin=true&callbackUrl=/admin"
-              className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
-            >
-              Create Admin Account
-            </Link>
-          </div>
-        )}
+        <div className="mt-4">
+          <Link
+            href="/register"
+            className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
+          >
+            Create Account
+          </Link>
+        </div>
 
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           <Link href="/" className="text-blue-600 hover:underline">
