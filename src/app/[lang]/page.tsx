@@ -60,10 +60,14 @@ type HomeCategory = {
   name: string
   slug: string
   description: string | null
+  parentId: string | null
+  sortOrder: number
   children: Array<{
     id: string
     name: string
     slug: string
+    parentId: string | null
+    sortOrder: number
   }>
 }
 
@@ -79,25 +83,38 @@ async function getHomeData() {
     let homeCategories: HomeCategory[] = []
     if (process.env.DATABASE_URL) {
       try {
-        homeCategories = await prisma.category.findMany({
-          where: { isActive: true, parentId: null },
-          orderBy: { sortOrder: 'asc' },
+        const flatCategories = await prisma.category.findMany({
+          where: { isActive: true },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
           select: {
             id: true,
             name: true,
             slug: true,
             description: true,
-            children: {
-              where: { isActive: true },
-              orderBy: { sortOrder: 'asc' },
-              select: {
-                id: true,
-                name: true,
-                slug: true,
-              },
-            },
+            parentId: true,
+            sortOrder: true,
           },
         })
+
+        const byId = new Map(flatCategories.map((category) => [category.id, { ...category, children: [] as HomeCategory['children'] }]))
+        const roots: HomeCategory[] = []
+
+        for (const category of Array.from(byId.values())) {
+          if (category.parentId && byId.has(category.parentId)) {
+            byId.get(category.parentId)!.children.push({
+              id: category.id,
+              name: category.name,
+              slug: category.slug,
+              parentId: category.parentId,
+              sortOrder: category.sortOrder,
+            })
+            continue
+          }
+
+          roots.push(category)
+        }
+
+        homeCategories = roots
       } catch (error) {
         console.error('Error fetching homepage categories:', error)
       }

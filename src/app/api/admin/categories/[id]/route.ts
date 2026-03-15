@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
+import { deleteCategoryFromSanity, syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
 // PATCH — update a category (admin only, secured)
 export const PATCH = withSecurity(
@@ -30,6 +31,7 @@ export const PATCH = withSecurity(
     }
 
     const { name, slug, color, description, parentId, sortOrder, isActive } = data
+    const normalizedParentId = typeof parentId === 'string' ? parentId.trim() : undefined
 
     if (slug) {
       const safeSlug = sanitizeSlug(slug)
@@ -41,8 +43,19 @@ export const PATCH = withSecurity(
       }
     }
 
-    if (parentId === id) {
+    if (normalizedParentId === id) {
       return NextResponse.json({ error: 'Cannot set category as its own parent' }, { status: 400 })
+    }
+
+    if (normalizedParentId) {
+      const parentExists = await prisma.category.findFirst({
+        where: { id: normalizedParentId, isActive: true },
+        select: { id: true },
+      })
+
+      if (!parentExists) {
+        return NextResponse.json({ error: 'Selected parent category was not found.' }, { status: 400 })
+      }
     }
 
     const category = await prisma.category.update({
@@ -52,7 +65,7 @@ export const PATCH = withSecurity(
         ...(slug !== undefined && { slug: sanitizeSlug(slug) }),
         ...(color !== undefined && { color }),
         ...(description !== undefined && { description }),
-        ...(parentId !== undefined && { parentId: parentId || null }),
+        ...(parentId !== undefined && { parentId: normalizedParentId || null }),
         ...(sortOrder !== undefined && { sortOrder }),
         ...(isActive !== undefined && { isActive }),
       },
@@ -61,6 +74,12 @@ export const PATCH = withSecurity(
         children: true,
       },
     })
+
+    try {
+      await syncCategoryToSanity(category)
+    } catch (syncError) {
+      console.error('Failed to sync updated category to Sanity:', syncError)
+    }
 
     revalidateCategoryViews([existingCategory.slug, category.slug])
 
@@ -93,6 +112,12 @@ export const DELETE = withSecurity(
 
         await tx.category.delete({ where: { id } })
       })
+
+      try {
+        await deleteCategoryFromSanity(id)
+      } catch (syncError) {
+        console.error('Failed to delete category in Sanity:', syncError)
+      }
 
       revalidateCategoryViews([existingCategory.slug])
 

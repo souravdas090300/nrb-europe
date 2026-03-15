@@ -37,6 +37,15 @@ export const categoryType = defineType({
       rows: 3,
     }),
     defineField({
+      name: 'parent',
+      title: 'Parent Category',
+      type: 'reference',
+      to: [{type: 'category'}],
+      options: {
+        disableNew: true,
+      },
+    }),
+    defineField({
       name: 'color',
       title: 'Badge Color',
       type: 'string',
@@ -51,6 +60,25 @@ export const categoryType = defineType({
         ],
       },
       initialValue: 'blue',
+    }),
+    defineField({
+      name: 'isActive',
+      title: 'Active',
+      type: 'boolean',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'sortOrder',
+      title: 'Sort Order',
+      type: 'number',
+      initialValue: 0,
+    }),
+    defineField({
+      name: 'source',
+      title: 'Source',
+      type: 'string',
+      readOnly: true,
+      initialValue: 'manual',
     }),
   ],
 })

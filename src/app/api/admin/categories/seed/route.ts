@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withSecurity } from '@/lib/security'
 import { categories as defaultCategories } from '@/lib/constants'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
+import { syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
 // POST — seed categories from constants (admin only, secured, idempotent)
 export const POST = withSecurity(
@@ -17,7 +18,7 @@ export const POST = withSecurity(
         skipped++
         continue
       }
-      await prisma.category.create({
+      const createdCategory = await prisma.category.create({
         data: {
           name: cat.name,
           slug: cat.slug,
@@ -26,6 +27,13 @@ export const POST = withSecurity(
           isActive: true,
         },
       })
+
+      try {
+        await syncCategoryToSanity(createdCategory)
+      } catch (syncError) {
+        console.error('Failed to sync seeded category to Sanity:', syncError)
+      }
+
       created++
     }
 

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
+import { syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
 // GET all categories (public — cached)
 export async function GET() {
@@ -48,6 +49,19 @@ export const POST = withSecurity(
     }
 
     const safeSlug = sanitizeSlug(slug)
+    const normalizedParentId = typeof parentId === 'string' ? parentId.trim() : ''
+
+    let parentCategory: { id: string; slug: string } | null = null
+    if (normalizedParentId) {
+      parentCategory = await prisma.category.findFirst({
+        where: { id: normalizedParentId, isActive: true },
+        select: { id: true, slug: true },
+      })
+
+      if (!parentCategory) {
+        return NextResponse.json({ error: 'Selected parent category was not found.' }, { status: 400 })
+      }
+    }
 
     // Check slug uniqueness
     const existing = await prisma.category.findUnique({ where: { slug: safeSlug } })
@@ -61,7 +75,7 @@ export const POST = withSecurity(
         slug: safeSlug,
         color: color || 'bg-gray-100 text-gray-800',
         description: description || null,
-        parentId: parentId || null,
+        parentId: parentCategory?.id || null,
         sortOrder: sortOrder ?? 0,
       },
       include: {
@@ -70,7 +84,13 @@ export const POST = withSecurity(
       },
     })
 
-    revalidateCategoryViews([category.slug])
+    try {
+      await syncCategoryToSanity(category)
+    } catch (syncError) {
+      console.error('Failed to sync created category to Sanity:', syncError)
+    }
+
+    revalidateCategoryViews([category.slug, parentCategory?.slug || ''])
 
     return NextResponse.json(category, { status: 201 })
   },

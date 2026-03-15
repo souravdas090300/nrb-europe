@@ -34,6 +34,7 @@ export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [seeding, setSeeding] = useState(false)
+  const [syncingSanity, setSyncingSanity] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
@@ -87,6 +88,25 @@ export default function AdminCategoriesPage() {
       setError('Failed to seed categories')
     } finally {
       setSeeding(false)
+      clearMessages()
+    }
+  }
+
+  const handleSyncToSanity = async () => {
+    setSyncingSanity(true)
+    setError('')
+    try {
+      const res = await fetch('/api/admin/categories/sync', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setSuccess(data.message || 'Categories synced to Sanity')
+      } else {
+        setError(data.error || 'Failed to sync categories to Sanity')
+      }
+    } catch {
+      setError('Failed to sync categories to Sanity')
+    } finally {
+      setSyncingSanity(false)
       clearMessages()
     }
   }
@@ -211,6 +231,13 @@ export default function AdminCategoriesPage() {
           <p className="text-gray-600 dark:text-gray-400">Manage categories and subcategories</p>
         </div>
         <div className="flex gap-2">
+          <button
+            onClick={handleSyncToSanity}
+            disabled={syncingSanity || categories.length === 0}
+            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 text-sm font-medium"
+          >
+            {syncingSanity ? 'Syncing...' : 'Sync to Sanity'}
+          </button>
           {categories.length === 0 && (
             <button
               onClick={handleSeed}
