@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { Locale } from '@/lib/i18n-config'
 import { getDictionary } from '@/lib/get-dictionary'
 import { client } from '@/lib/sanity/client'
-import { getLocalizedCategoryValue, getLocalizedOptionalCategoryValue } from '@/lib/category-localization'
+import { getLocalizedCategoryValue, getLocalizedOptionalCategoryValue, readCategoryTranslations } from '@/lib/category-localization'
 import { prisma } from '@/lib/prisma'
 import HeroSection from '@/components/sections/HeroSection'
 import TrendingStories from '@/components/sections/TrendingStories'
@@ -76,12 +76,15 @@ type HomeCategory = {
 
 async function getHomeData(lang: Locale) {
   try {
-    const [heroArticles, latestArticles, trendingArticles, videoArticles] = await Promise.all([
+    const [heroArticlesRaw, latestArticlesRaw, trendingArticles, videoArticles] = await Promise.all([
       client.fetch(heroArticlesQuery),
       client.fetch(latestArticlesQuery),
       client.fetch(trendingArticlesQuery),
       client.fetch(videoArticlesQuery),
     ])
+
+    let heroArticles = heroArticlesRaw
+    let latestArticles = latestArticlesRaw
 
     let homeCategories: HomeCategory[] = []
     if (process.env.DATABASE_URL) {
@@ -100,6 +103,32 @@ async function getHomeData(lang: Locale) {
             sortOrder: true,
           },
         })
+
+        const categoryBySlug = new Map(
+          flatCategories.map((category) => [category.slug, category])
+        )
+
+        // Ensure homepage article category badges always use DB translations by slug.
+        const localizeArticleCategory = (article: any) => {
+          const dbCategory = article.categorySlug ? categoryBySlug.get(article.categorySlug) : undefined
+
+          if (dbCategory) {
+            return {
+              ...article,
+              category: getLocalizedCategoryValue(dbCategory.name, dbCategory.nameTranslations, lang),
+              categoryTranslations: readCategoryTranslations(dbCategory.nameTranslations),
+            }
+          }
+
+          return {
+            ...article,
+            category: getLocalizedCategoryValue(article.category || null, article.categoryTranslations, lang),
+            categoryTranslations: readCategoryTranslations(article.categoryTranslations),
+          }
+        }
+
+        heroArticles = heroArticlesRaw.map(localizeArticleCategory)
+        latestArticles = latestArticlesRaw.map(localizeArticleCategory)
 
         const localizedCategories = flatCategories.map((category) => ({
           id: category.id,
