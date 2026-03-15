@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
+import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 
 // GET all categories (public — cached)
 export async function GET() {
@@ -20,7 +21,7 @@ export async function GET() {
 
     return NextResponse.json(categories, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     })
   } catch (error) {
@@ -68,6 +69,8 @@ export const POST = withSecurity(
         children: true,
       },
     })
+
+    revalidateCategoryViews([category.slug])
 
     return NextResponse.json(category, { status: 201 })
   },

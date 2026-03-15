@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity } from '@/lib/security'
 import { categories as defaultCategories } from '@/lib/constants'
+import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 
 // POST — seed categories from constants (admin only, secured, idempotent)
 export const POST = withSecurity(
@@ -27,6 +28,8 @@ export const POST = withSecurity(
       })
       created++
     }
+
+    revalidateCategoryViews(defaultCategories.map((category) => category.slug))
 
     return NextResponse.json({
       message: `Seeded ${created} categories, skipped ${skipped} existing`,

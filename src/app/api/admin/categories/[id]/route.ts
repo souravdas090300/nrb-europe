@@ -3,12 +3,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { withSecurity, safeParseBody } from '@/lib/security'
 import { sanitizeSlug } from '@/lib/security'
+import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 
 // PATCH — update a category (admin only, secured)
 export const PATCH = withSecurity(
   async (request: NextRequest, { params }) => {
     const id = params?.id
     if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+
+    const existingCategory = await prisma.category.findUnique({
+      where: { id },
+      select: { slug: true },
+    })
+
+    if (!existingCategory) {
+      return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+    }
 
     const { data, error } = await safeParseBody<{
       name?: string; slug?: string; color?: string; description?: string;
@@ -52,6 +62,8 @@ export const PATCH = withSecurity(
       },
     })
 
+    revalidateCategoryViews([existingCategory.slug, category.slug])
+
     return NextResponse.json(category)
   },
   { rateLimit: 'admin', adminOnly: true }
@@ -65,7 +77,7 @@ export const DELETE = withSecurity(
 
     const existingCategory = await prisma.category.findUnique({
       where: { id },
-      select: { id: true, name: true },
+      select: { id: true, name: true, slug: true },
     })
 
     if (!existingCategory) {
@@ -81,6 +93,8 @@ export const DELETE = withSecurity(
 
         await tx.category.delete({ where: { id } })
       })
+
+      revalidateCategoryViews([existingCategory.slug])
 
       return NextResponse.json({ success: true })
     } catch (error) {

@@ -19,6 +19,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, Search, Play, User, Sun, Moon, X, Briefcase, LogOut } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
 import { useTheme } from '../ui/ThemeProvider'
 import { Locale } from '@/lib/i18n-config'
@@ -42,6 +43,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const { theme, toggleTheme } = useTheme()
   const [currentDate, setCurrentDate] = useState('')
   const { data: session } = useSession()
+  const pathname = usePathname()
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
@@ -90,7 +92,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
     return () => {
       mounted = false
     }
-  }, [])
+  }, [pathname])
 
   const getCatLabel = (cat: { slug: string; name: string }) =>
     dictionary?.categories?.[cat.slug] || dictionary?.nav?.[cat.slug] || cat.name
