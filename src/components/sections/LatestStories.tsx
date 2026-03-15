@@ -12,6 +12,8 @@ interface Article {
   mainImage?: any;
   publishedAt: string;
   category?: string;
+  categorySlug?: string;
+  categoryTranslations?: Record<string, string>;
   author?: string;
 }
 
@@ -27,6 +29,20 @@ const LatestStories: React.FC<LatestStoriesProps> = ({ articles, lang = 'en', di
   }
 
   const displayArticles = articles;
+  const locale =
+    lang === 'bn' ? 'bn-BD' :
+    lang === 'es' ? 'es-ES' :
+    lang === 'de' ? 'de-DE' :
+    lang === 'fr' ? 'fr-FR' : 'en-US';
+
+  const getCategoryLabel = (article: Article) => {
+    return (
+      article.categoryTranslations?.[lang] ||
+      (article.categorySlug ? dictionary?.categories?.[article.categorySlug] : undefined) ||
+      article.category ||
+      ''
+    );
+  };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -49,7 +65,7 @@ const LatestStories: React.FC<LatestStoriesProps> = ({ articles, lang = 'en', di
                 {article.category && (
                   <div className="absolute top-4 left-4">
                     <span className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded">
-                      {article.category}
+                      {getCategoryLabel(article)}
                     </span>
                   </div>
                 )}
@@ -66,7 +82,7 @@ const LatestStories: React.FC<LatestStoriesProps> = ({ articles, lang = 'en', di
                 )}
                 <span className="flex items-center">
                   <Calendar className="w-3.5 h-3.5 mr-1" />
-                  {new Date(article.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {new Date(article.publishedAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </span>
               </div>
               

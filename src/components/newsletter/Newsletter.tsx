@@ -41,11 +41,11 @@ const Newsletter: React.FC<{ dictionary?: any }> = ({ dictionary }) => {
         setEmail('');
         setTimeout(() => setSubscribed(false), 5000);
       } else {
-        alert(data.error || 'Failed to subscribe');
+        alert(data.error || nl.errorMessage || 'Failed to subscribe');
       }
     } catch (error) {
       Sentry.captureException(error);
-      alert('Failed to subscribe. Please try again.');
+      alert(nl.errorRetryMessage || 'Failed to subscribe. Please try again.');
     } finally {
       setLoading(false);
     }

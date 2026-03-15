@@ -186,12 +186,6 @@ export default function NewsLayoutPremium({
         <div className="py-16 text-center">
           <p className="text-xl text-gray-600 mb-4">No articles published yet in {categoryTitle}</p>
           <p className="text-gray-500">Check back soon for the latest {categoryTitle} news</p>
-          <Link
-            href={`${basePath}/studio`}
-            className="inline-block mt-6 px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Go to Studio
-          </Link>
         </div>
       )}
 

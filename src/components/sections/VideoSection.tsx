@@ -22,6 +22,11 @@ interface VideoSectionProps {
 
 const VideoSection: React.FC<VideoSectionProps> = ({ videos, lang = 'en', dictionary }) => {
   const [hoveredVideo, setHoveredVideo] = useState<string | null>(null);
+  const locale =
+    lang === 'bn' ? 'bn-BD' :
+    lang === 'es' ? 'es-ES' :
+    lang === 'de' ? 'de-DE' :
+    lang === 'fr' ? 'fr-FR' : 'en-US';
 
   if (!videos || videos.length === 0) {
     return null;
@@ -81,7 +86,7 @@ const VideoSection: React.FC<VideoSectionProps> = ({ videos, lang = 'en', dictio
                   {video.title}
                 </h3>
                 <p className="text-sm text-gray-400 mt-1">
-                  {new Date(video.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                  {new Date(video.publishedAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}
                 </p>
               </div>
             </Link>

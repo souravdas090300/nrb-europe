@@ -20,6 +20,8 @@ interface Article {
   mainImage?: any;
   publishedAt: string;
   category?: string;
+  categorySlug?: string;
+  categoryTranslations?: Record<string, string>;
   author?: string;
   isLive?: boolean;
 }
@@ -37,6 +39,20 @@ const HeroSection: React.FC<HeroSectionProps> = ({ articles, lang = 'en', dictio
 
   const displayArticles = articles;
   const [mainStory, ...sideStories] = displayArticles;
+  const locale =
+    lang === 'bn' ? 'bn-BD' :
+    lang === 'es' ? 'es-ES' :
+    lang === 'de' ? 'de-DE' :
+    lang === 'fr' ? 'fr-FR' : 'en-US';
+
+  const getCategoryLabel = (story: Article) => {
+    return (
+      story.categoryTranslations?.[lang] ||
+      (story.categorySlug ? dictionary?.categories?.[story.categorySlug] : undefined) ||
+      story.category ||
+      ''
+    );
+  };
 
   return (
     <section className="bg-gray-50 dark:bg-gray-900 border-b dark:border-gray-800">
@@ -69,7 +85,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ articles, lang = 'en', dictio
                   <div className="absolute top-4 right-4">
                     <span className="flex items-center bg-red-600 text-white px-4 py-2 rounded-full animate-pulse">
                       <span className="w-2 h-2 bg-white rounded-full mr-2" />
-                      LIVE
+                      {dictionary?.home?.liveNow || 'LIVE'}
                     </span>
                   </div>
                 )}
@@ -78,7 +94,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ articles, lang = 'en', dictio
                 {mainStory.category && (
                   <div className="absolute top-4 left-4">
                     <span className="bg-red-600 text-white text-sm font-bold px-3 py-1 rounded">
-                      {mainStory.category}
+                      {getCategoryLabel(mainStory)}
                     </span>
                   </div>
                 )}
@@ -103,7 +119,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ articles, lang = 'en', dictio
                     )}
                     <div className="flex items-center">
                       <Clock className="w-4 h-4 mr-2" />
-                      <span>{new Date(mainStory.publishedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <span>{new Date(mainStory.publishedAt).toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                   </div>
                 </div>
@@ -128,7 +144,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ articles, lang = 'en', dictio
                   </div>
                   <div>
                     <span className="inline-block bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-semibold px-2 py-1 rounded mb-2">
-                      {story.category}
+                      {getCategoryLabel(story)}
                     </span>
                     <h3 className="font-bold text-lg text-gray-900 dark:text-white hover:text-red-600 transition">
                       <Link href={`/${lang}/news/${story.slug.current}`}>

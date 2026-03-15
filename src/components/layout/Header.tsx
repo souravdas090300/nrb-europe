@@ -17,7 +17,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Menu, Search, Play, User, Sun, Moon, X, Briefcase, LogOut } from 'lucide-react'
+import { Menu, Search, Play, User, Sun, Moon, X, LogOut } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname } from 'next/navigation'
 import LanguageSwitcher from '../ui/LanguageSwitcher'
@@ -49,7 +49,6 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const [currentDate, setCurrentDate] = useState('')
   const { data: session } = useSession()
   const pathname = usePathname()
-  const profileHref = session?.user?.role === 'admin' ? '/admin/profile' : '/profile'
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
@@ -268,19 +267,6 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   <p className="font-medium text-sm">{session.user.name}</p>
                   <p className="text-xs text-gray-500">{session.user.email}</p>
                 </div>
-                {session.user.role === 'admin' && (
-                  <>
-                    <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
-                      Dashboard
-                    </Link>
-                    <Link href="/admin/profile" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
-                      Admin Profile
-                    </Link>
-                    <Link href="/admin/studio" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
-                      Content Studio
-                    </Link>
-                  </>
-                )}
                 {session.user.role !== 'admin' && (
                   <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
                     Profile
@@ -332,37 +318,17 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   <p className={`font-medium text-sm ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'}`}>{session.user.name}</p>
                   <p className="text-xs text-gray-500">{session.user.email}</p>
                 </div>
-                {session.user.role === 'admin' && (
+                {session.user.role !== 'admin' && (
                   <Link
-                    href="/admin"
+                    href="/profile"
                     onClick={() => setMenuOpen(false)}
                     className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
                       theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
                     }`}
                   >
-                    <User size={14} /> Dashboard
+                    <User size={14} /> Profile
                   </Link>
                 )}
-                {session.user.role === 'admin' && (
-                  <Link
-                    href="/admin/studio"
-                    onClick={() => setMenuOpen(false)}
-                    className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                      theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-                    }`}
-                  >
-                    <Briefcase size={14} /> Content Studio
-                  </Link>
-                )}
-                <Link
-                  href={profileHref}
-                  onClick={() => setMenuOpen(false)}
-                  className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                    theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-                  }`}
-                >
-                  <User size={14} /> {session.user.role === 'admin' ? 'Admin Profile' : 'Profile'}
-                </Link>
                 <button
                   onClick={() => { signOut(); setMenuOpen(false) }}
                   className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 text-left ${

@@ -22,6 +22,7 @@ const heroArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[0..3] {
   isLive,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
+  "categoryTranslations": categories[0]->nameTranslations,
   "author": author->name
 }`
 
@@ -36,6 +37,7 @@ const latestArticlesQuery = `*[_type == "post"] | order(publishedAt desc)[4..9] 
   body,
   "category": categories[0]->title,
   "categorySlug": categories[0]->slug.current,
+  "categoryTranslations": categories[0]->nameTranslations,
   "author": author->name
 }`
 
