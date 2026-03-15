@@ -301,7 +301,7 @@ The `vercel.json` handles build settings:
 ```json
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build"
+   "buildCommand": "node scripts/vercel-build.js"
 }
 ```
 
