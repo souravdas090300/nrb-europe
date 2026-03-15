@@ -44,7 +44,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  let body: { email?: unknown; name?: unknown; password?: unknown }
+  let body: {
+    email?: unknown
+    name?: unknown
+    password?: unknown
+    isAdminRegistration?: unknown
+    adminSetupCode?: unknown
+  }
   try {
     body = await request.json()
   } catch {
@@ -55,11 +61,29 @@ export async function POST(request: NextRequest) {
     const rawEmail = body.email
     const rawName = body.name
     const rawPassword = body.password
+    const rawIsAdminRegistration = body.isAdminRegistration
+    const rawAdminSetupCode = body.adminSetupCode
 
     // Sanitize inputs
     const email = sanitizeEmail(typeof rawEmail === 'string' ? rawEmail : '')
     const name = sanitizeString(typeof rawName === 'string' ? rawName : '')
     const password = typeof rawPassword === 'string' ? rawPassword : '' // Don't sanitize passwords — they can contain special chars
+    const isAdminRegistration = rawIsAdminRegistration === true
+    const adminSetupCode = typeof rawAdminSetupCode === 'string' ? rawAdminSetupCode.trim() : ''
+
+    if (isAdminRegistration) {
+      const ownerSetupSecret = process.env.ADMIN_SETUP_SECRET
+      if (!ownerSetupSecret) {
+        return NextResponse.json(
+          { error: 'Admin registration is not configured. Set ADMIN_SETUP_SECRET in environment variables.' },
+          { status: 503 }
+        )
+      }
+
+      if (!adminSetupCode || adminSetupCode !== ownerSetupSecret) {
+        return NextResponse.json({ error: 'Invalid owner setup code for admin registration.' }, { status: 403 })
+      }
+    }
 
     if (!email) {
       return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
@@ -113,7 +137,7 @@ export async function POST(request: NextRequest) {
           email,
           name,
           password: hashedPassword,
-          role: 'subscriber',
+          role: isAdminRegistration ? 'admin' : 'subscriber',
           // Auto-verify unless email verification flow is fully configured.
           ...(!emailVerificationEnabled && { emailVerified: new Date() }),
         },

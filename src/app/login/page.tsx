@@ -241,6 +241,17 @@ function LoginForm() {
           </div>
         )}
 
+        {isAdminLogin && (
+          <div className="mt-4">
+            <Link
+              href="/register?admin=true&callbackUrl=/admin"
+              className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition font-semibold text-sm"
+            >
+              Create Admin Account
+            </Link>
+          </div>
+        )}
+
         <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
           <Link href="/" className="text-blue-600 hover:underline">
             Back to Home
