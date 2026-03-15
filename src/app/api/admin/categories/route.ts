@@ -5,7 +5,9 @@ import { sanitizeSlug } from '@/lib/security'
 import { revalidateCategoryViews } from '@/lib/revalidate-categories'
 import { syncCategoryToSanity } from '@/lib/sanity/category-sync'
 
-// GET all categories (public — cached)
+export const dynamic = 'force-dynamic'
+
+// GET all categories for admin (no cache)
 export async function GET() {
   try {
     const categories = await prisma.category.findMany({
@@ -14,10 +16,14 @@ export async function GET() {
         children: {
           where: { isActive: true },
           orderBy: { sortOrder: 'asc' },
+          include: {
+            parent: { select: { id: true, name: true, slug: true } },
+            children: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+          },
         },
         parent: { select: { id: true, name: true, slug: true } },
       },
-      orderBy: { sortOrder: 'asc' },
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     })
 
     return NextResponse.json(categories, {

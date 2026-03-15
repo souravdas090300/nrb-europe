@@ -1,463 +1,170 @@
 # API Reference
 
-Complete reference for all API routes in the NRB Europe application.
+Current API surface for NRB Europe, based on the route handlers under `src/app/api`.
 
----
+## Conventions
 
-## Table of Contents
+- Most endpoints return JSON
+- Some endpoints return HTML or plain text where that is part of the UX, such as newsletter unsubscribe
+- Authenticated routes use the NextAuth session
+- Admin routes require an authenticated admin user
+- Several routes are wrapped with shared security helpers for rate limiting and auth checks
 
-- [Authentication](#authentication)
-- [Admin](#admin)
-- [Content](#content)
-- [Comments](#comments)
-- [Newsletter](#newsletter)
-- [Stripe / Payments](#stripe--payments)
-- [Webhooks](#webhooks)
-- [Miscellaneous](#miscellaneous)
+## Route Inventory
 
----
+### Authentication
 
-## Authentication
-
-All auth routes are under `/api/auth/`.
-
-### NextAuth Endpoints
-
-| Method | Endpoint | Description |
+| Method | Route | Notes |
 |---|---|---|
-| GET/POST | `/api/auth/[...nextauth]` | NextAuth handler (sign in, sign out, session, CSRF, providers) |
+| `GET`, `POST` | `/api/auth/[...nextauth]` | NextAuth handler |
+| `POST` | `/api/auth/register` | Create a user account |
+| `GET` | `/api/auth/verify` | Verify email token |
+| `POST` | `/api/auth/forgot-password` | Request password reset |
+| `POST` | `/api/auth/reset-password` | Reset password with token |
+| `POST` | `/api/auth/change-password` | Change password for authenticated user |
+| `GET`, `PUT` | `/api/auth/profile` | Read or update the current profile |
 
-NextAuth automatically provides:
-- `GET /api/auth/session` — Current session
-- `GET /api/auth/csrf` — CSRF token
-- `GET /api/auth/providers` — Available providers
-- `POST /api/auth/signin/{provider}` — Start sign-in flow
-- `POST /api/auth/signout` — Sign out
-- `GET /api/auth/callback/{provider}` — OAuth callback
+### Admin
 
-### Register
+| Method | Route | Notes |
+|---|---|---|
+| `GET` | `/api/admin/stats` | Dashboard summary |
+| `GET` | `/api/admin/analytics` | Dashboard analytics |
+| `GET` | `/api/admin/users` | List users |
+| `GET`, `PUT`, `DELETE` | `/api/admin/users/[id]` | User management |
+| `GET`, `POST` | `/api/admin/categories` | List or create DB categories |
+| `GET`, `PUT`, `DELETE` | `/api/admin/categories/[id]` | Category management |
+| `POST` | `/api/admin/categories/seed` | Seed default categories |
+| `POST` | `/api/admin/categories/sync` | Sync DB categories into Sanity |
+| `GET` | `/api/admin/subscriptions` | List subscriptions |
+| `GET` | `/api/admin/newsletter/subscribers` | List newsletter subscribers |
+| `POST` | `/api/admin/newsletter/send` | Send a newsletter blast |
 
-```
-POST /api/auth/register
-```
+### Public content and discovery
 
-**Body:**
+| Method | Route | Notes |
+|---|---|---|
+| `GET` | `/api/categories` | Public active categories from Prisma |
+| `GET` | `/api/search?q=...` | Search Sanity posts by title and excerpt |
+| `GET` | `/api/breaking-news` | Return current breaking-news content |
+| `GET` | `/api/live-updates` | Return live updates feed |
+
+### Comments
+
+| Method | Route | Notes |
+|---|---|---|
+| `GET`, `POST` | `/api/comments` | Fetch approved comments or create a comment |
+| `POST` | `/api/comments/moderate` | Admin moderation action |
+
+`POST /api/comments` expects:
+
 ```json
 {
-  "email": "user@example.com",
-  "name": "John Doe",
-  "password": "SecurePass123"
-}
-```
-
-**Validation:**
-- Email required, sanitized & lowercased
-- Name required (1-100 characters), sanitized
-- Password: 8-128 characters, must include uppercase, lowercase, and number
-
-**Responses:**
-- `201` — Account created, verification email sent
-- `400` — Validation error
-- `409` — Email already exists
-- `429` — Rate limited (10 attempts / 15 minutes)
-- `500` — Server error
-
-### Verify Email
-
-```
-GET /api/auth/verify?token={token}
-```
-
-**Query Parameters:**
-- `token` (required) — Verification token from email
-
-**Responses:**
-- `200` — Email verified, `emailVerified` timestamp set
-- `400` — Missing or invalid/expired token
-- `500` — Server error
-
-### Forgot Password
-
-```
-POST /api/auth/forgot-password
-```
-
-**Body:**
-```json
-{
-  "email": "user@example.com"
-}
-```
-
-**Responses:**
-- `200` — Reset email sent (always returns success for security, even if email doesn't exist)
-- `429` — Rate limited
-
-### Reset Password
-
-```
-POST /api/auth/reset-password
-```
-
-**Body:**
-```json
-{
-  "token": "reset-token-from-email",
-  "password": "NewSecurePass123"
-}
-```
-
-**Responses:**
-- `200` — Password updated
-- `400` — Invalid/expired token or weak password
-- `500` — Server error
-
-### Change Password
-
-```
-POST /api/auth/change-password
-```
-
-**Headers:** Requires authenticated session.
-
-**Body:**
-```json
-{
-  "currentPassword": "OldPass123",
-  "newPassword": "NewPass456"
-}
-```
-
-**Responses:**
-- `200` — Password changed
-- `400` — Validation error
-- `401` — Not authenticated
-- `500` — Server error
-
-### Profile
-
-```
-GET /api/auth/profile
-PUT /api/auth/profile
-```
-
-**PUT Body:**
-```json
-{
-  "name": "Updated Name"
-}
-```
-
-**Responses:**
-- `200` — Profile data or updated profile
-- `401` — Not authenticated
-
----
-
-## Admin
-
-All admin routes require authentication and `admin` role. Routes are under `/api/admin/`.
-
-### Stats
-
-```
-GET /api/admin/stats
-```
-
-Returns dashboard summary statistics (user count, subscription count, revenue, etc.).
-
-### Analytics
-
-```
-GET /api/admin/analytics
-```
-
-Returns detailed analytics data for the admin dashboard.
-
-### Users
-
-```
-GET /api/admin/users
-```
-
-Returns paginated list of all users.
-
-```
-GET /api/admin/users/{id}
-PUT /api/admin/users/{id}
-DELETE /api/admin/users/{id}
-```
-
-User CRUD operations (update role, delete user).
-
-### Categories
-
-```
-GET /api/admin/categories
-POST /api/admin/categories
-```
-
-List and create categories.
-
-```
-GET /api/admin/categories/{id}
-PUT /api/admin/categories/{id}
-DELETE /api/admin/categories/{id}
-```
-
-Category CRUD operations.
-
-```
-POST /api/admin/categories/seed
-```
-
-Seed default categories from constants.
-
-### Newsletter Management
-
-```
-GET /api/admin/newsletter/subscribers
-```
-
-List all newsletter subscribers.
-
-```
-POST /api/admin/newsletter/send
-```
-
-**Body:**
-```json
-{
-  "subject": "Newsletter Subject",
-  "html": "<h1>Newsletter Content</h1>"
-}
-```
-
-Send newsletter to all active subscribers.
-
-### Subscriptions
-
-```
-GET /api/admin/subscriptions
-```
-
-List all Stripe subscriptions with user data.
-
----
-
-## Content
-
-### Search
-
-```
-GET /api/search?q={query}&page={page}
-```
-
-**Query Parameters:**
-- `q` (required) — Search query
-- `page` (optional, default: 1) — Page number
-
-**Rate limit:** 30 requests/minute
-
-### Breaking News
-
-```
-GET /api/breaking-news
-```
-
-Returns current breaking news from Sanity (live update type).
-
-### Live Updates
-
-```
-GET /api/live-updates
-```
-
-Returns live updates feed.
-
----
-
-## Comments
-
-```
-GET /api/comments?articleId={articleId}
-POST /api/comments
-```
-
-**POST Body:**
-```json
-{
-  "articleId": "sanity-article-id",
-  "content": "My comment text",
+  "articleId": "sanity-document-id",
+  "content": "Comment text",
   "parentId": null
 }
 ```
 
-- `parentId` — For nested/reply comments
-- Requires authenticated session
-- New comments default to `pending` status
+New comments from `admin` or `editor` users are auto-approved. Other users create `pending` comments.
 
-### Moderation (Admin)
+### Newsletter
 
-```
-POST /api/comments/moderate
-```
+| Method | Route | Notes |
+|---|---|---|
+| `POST` | `/api/newsletter/subscribe` | Create or reactivate a subscriber |
+| `GET` | `/api/newsletter/unsubscribe?token=...` | HTML unsubscribe confirmation page |
 
-**Body:**
-```json
-{
-  "commentId": "comment-id",
-  "status": "approved"
-}
-```
+`POST /api/newsletter/subscribe` accepts:
 
-Status options: `approved`, `spam`, `pending`
-
----
-
-## Newsletter
-
-### Public Subscribe
-
-```
-POST /api/newsletter/subscribe
-```
-
-**Body:**
 ```json
 {
   "email": "user@example.com",
-  "name": "John"
+  "name": "Optional Name"
 }
 ```
 
-### Unsubscribe
+Important detail: unsubscribe uses a `token` query parameter, not an email address.
 
-```
-GET /api/newsletter/unsubscribe?email={email}
-```
+### Stripe and billing
 
----
+| Method | Route | Notes |
+|---|---|---|
+| `POST` | `/api/stripe/create-checkout` | Start subscription checkout |
+| `POST` | `/api/stripe/portal` | Open Stripe billing portal |
+| `POST` | `/api/stripe/webhook` | Handle Stripe events |
 
-## Stripe / Payments
+`POST /api/stripe/create-checkout` expects:
 
-### Create Checkout Session
-
-```
-POST /api/stripe/create-checkout
-```
-
-**Headers:** Requires authenticated session.
-
-**Body:**
 ```json
 {
-  "priceId": "price_xxx"
+  "plan": "monthly"
 }
 ```
 
-**Response:**
+Valid plans are `monthly` and `yearly`, resolved from environment-backed Stripe price IDs in `src/lib/stripe.ts`.
+
+The route currently returns:
+
 ```json
 {
-  "url": "https://checkout.stripe.com/..."
+  "sessionId": "cs_test_..."
 }
 ```
 
-### Customer Portal
+That return shape is important because the current subscribe page expects a `url`, which is a separate application bug.
 
-```
-POST /api/stripe/portal
-```
+Stripe webhook handling includes these events:
 
-Creates a Stripe Customer Portal session for self-service subscription management.
+- `checkout.session.completed`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
 
-### Webhook
+### Push and scheduled work
 
-```
-POST /api/stripe/webhook
-```
+| Method | Route | Notes |
+|---|---|---|
+| `POST` | `/api/push/subscribe` | Store push subscription |
+| `POST` | `/api/push/unsubscribe` | Remove push subscription |
+| `GET` | `/api/cron/publish-scheduled` | Scheduled publish hook |
 
-Handles Stripe webhook events:
-- `checkout.session.completed` — New subscription
-- `customer.subscription.updated` — Subscription changes
-- `customer.subscription.deleted` — Cancellation
-- `invoice.payment_succeeded` — Payment recorded
+### External webhooks
 
-**Requires:** `STRIPE_WEBHOOK_SECRET` for signature verification.
+| Method | Route | Notes |
+|---|---|---|
+| `POST` | `/api/webhooks/sanity` | Sanity content webhook |
+| `POST` | `/api/webhooks/breaking-news` | Breaking-news webhook |
 
----
+## Error Shapes
 
-## Webhooks
+Most error responses follow a simple form:
 
-### Sanity Webhook
-
-```
-POST /api/webhooks/sanity
-```
-
-Handles Sanity content webhook events (revalidation, etc.).
-
-### Breaking News Webhook
-
-```
-POST /api/webhooks/breaking-news
+```json
+{
+  "error": "Human-readable message"
+}
 ```
 
-Triggered by Sanity when breaking news is published.
+Common status codes used in this codebase:
 
----
+- `400` invalid input
+- `401` unauthenticated
+- `403` forbidden
+- `404` not found
+- `409` duplicate or already exists
+- `429` rate limited
+- `500` unhandled server error
 
-## Miscellaneous
+## Rate Limiting
 
-### Push Notifications
+Security helpers define per-route-group rate limits used across the API layer:
 
-```
-POST /api/push/subscribe
-POST /api/push/unsubscribe
-```
-
-Web Push notification subscription management.
-
-### Scheduled Publishing (Cron)
-
-```
-GET /api/cron/publish-scheduled
-```
-
-Cron endpoint to publish scheduled Sanity posts. Typically called by a cron service.
-
----
-
-## Rate Limits
-
-| Route Group | Limit |
+| Group | Limit |
 |---|---|
-| Auth routes | 10 requests / 15 minutes |
+| Auth | 10 requests / 15 minutes |
 | Search | 30 requests / minute |
 | General API | 60 requests / minute |
-| Admin routes | 100 requests / minute |
+| Admin | 100 requests / minute |
 | Webhooks | 50 requests / minute |
-| Sensitive (password reset) | 5 requests / minute |
-
-Rate limits are per-IP using an in-memory sliding window.
-
----
-
-## Error Responses
-
-All API errors follow this format:
-
-```json
-{
-  "error": "Human-readable error message"
-}
-```
-
-Common HTTP status codes:
-- `400` — Bad Request (validation error)
-- `401` — Unauthorized (not authenticated)
-- `403` — Forbidden (insufficient role)
-- `404` — Not Found
-- `409` — Conflict (duplicate resource)
-- `429` — Too Many Requests (rate limited)
-- `500` — Internal Server Error
+| Strict / sensitive operations | 5 requests / minute |

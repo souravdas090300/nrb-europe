@@ -15,7 +15,7 @@
 
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Menu, Search, Play, User, Sun, Moon, X, Briefcase, LogOut } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
@@ -29,10 +29,13 @@ import NrbLogo from '../ui/NrbLogo'
 /** Category slugs that are shown only in the hamburger menu (not the top nav bar). */
 const HAMBURGER_SLUGS = new Set(['jobs', 'travel'])
 
+type NavChild = { slug: string; name: string }
+
 type NavCategory = {
   slug: string
   name: string
   parentId?: string | null
+  children?: NavChild[]
 }
 
 const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
@@ -40,6 +43,8 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [categories, setCategories] = useState<NavCategory[]>(fallbackCategories)
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null)
+  const dropdownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { theme, toggleTheme } = useTheme()
   const [currentDate, setCurrentDate] = useState('')
   const { data: session } = useSession()
@@ -77,6 +82,14 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
             slug: String(cat.slug || ''),
             name: String(cat.name || ''),
             parentId: cat.parentId || null,
+            children: Array.isArray(cat.children)
+              ? cat.children
+                  .map((child: any) => ({
+                    slug: String(child.slug || ''),
+                    name: String(child.name || ''),
+                  }))
+                  .filter((c: NavChild) => c.slug && c.name)
+              : [],
           }))
           .filter((cat) => cat.slug && cat.name)
 
@@ -97,9 +110,19 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const getCatLabel = (cat: { slug: string; name: string }) =>
     dictionary?.categories?.[cat.slug] || dictionary?.nav?.[cat.slug] || cat.name
 
+  // API now returns tree (rootCategories); all returned items are top-level
   const topLevelCategories = categories.filter((c) => !c.parentId)
   const navCategories = topLevelCategories.filter((c) => !HAMBURGER_SLUGS.has(c.slug))
   const hamburgerCategories = topLevelCategories.filter((c) => HAMBURGER_SLUGS.has(c.slug))
+
+  const handleDropdownEnter = (slug: string) => {
+    if (dropdownTimerRef.current) clearTimeout(dropdownTimerRef.current)
+    setOpenDropdown(slug)
+  }
+
+  const handleDropdownLeave = () => {
+    dropdownTimerRef.current = setTimeout(() => setOpenDropdown(null), 150)
+  }
 
   const linkClass = `shrink-0 text-[12px] font-bold uppercase tracking-wide no-underline whitespace-nowrap hover:text-red-600 ${
     theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
@@ -144,15 +167,50 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           </Link>
 
           {/* Categories hidden on mobile, visible on md+ */}
-          {navCategories.map((cat) => (
-            <Link
-              key={cat.slug}
-              href={`/${lang}/category/${cat.slug}`}
-              className={`${linkClass} hidden md:inline`}
-            >
-              {getCatLabel(cat)}
-            </Link>
-          ))}
+          {navCategories.map((cat) => {
+            const hasChildren = (cat.children?.length ?? 0) > 0
+            return (
+              <div
+                key={cat.slug}
+                className="relative hidden md:inline-block shrink-0"
+                onMouseEnter={() => hasChildren && handleDropdownEnter(cat.slug)}
+                onMouseLeave={hasChildren ? handleDropdownLeave : undefined}
+              >
+                <Link
+                  href={`/${lang}/category/${cat.slug}`}
+                  className={`${linkClass} flex items-center gap-0.5`}
+                >
+                  {getCatLabel(cat)}
+                  {hasChildren && (
+                    <span className="text-[10px] opacity-60 ml-0.5">▾</span>
+                  )}
+                </Link>
+                {hasChildren && openDropdown === cat.slug && (
+                  <div
+                    className={`absolute top-full left-0 mt-1 min-w-[140px] rounded-md border shadow-lg py-1 z-50 ${
+                      theme === 'dark'
+                        ? 'bg-gray-900 border-gray-700'
+                        : 'bg-white border-gray-200'
+                    }`}
+                    onMouseEnter={() => handleDropdownEnter(cat.slug)}
+                    onMouseLeave={handleDropdownLeave}
+                  >
+                    {cat.children!.map((child) => (
+                      <Link
+                        key={child.slug}
+                        href={`/${lang}/category/${child.slug}`}
+                        className={`block px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide hover:text-red-600 whitespace-nowrap ${
+                          theme === 'dark' ? 'text-gray-300' : 'text-gray-700'
+                        }`}
+                      >
+                        {dictionary?.categories?.[child.slug] || child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </nav>
 
         <div className="flex-1 min-w-2" />
@@ -317,18 +375,35 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
               </Link>
             )}
             <hr className={`my-1 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
-            {/* All categories in hamburger menu */}
+            {/* All categories in hamburger menu — with subcategories indented */}
             {[...navCategories, ...hamburgerCategories].map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/${lang}/category/${cat.slug}`}
-                onClick={() => setMenuOpen(false)}
-                className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
-                  theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
-                }`}
-              >
-                {getCatLabel(cat)}
-              </Link>
+              <div key={cat.slug}>
+                <Link
+                  href={`/${lang}/category/${cat.slug}`}
+                  onClick={() => setMenuOpen(false)}
+                  className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                    theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+                  }`}
+                >
+                  {getCatLabel(cat)}
+                </Link>
+                {(cat.children?.length ?? 0) > 0 && (
+                  <div className="pl-4 flex flex-col">
+                    {cat.children!.map((child) => (
+                      <Link
+                        key={child.slug}
+                        href={`/${lang}/category/${child.slug}`}
+                        onClick={() => setMenuOpen(false)}
+                        className={`text-xs font-semibold uppercase py-0.5 no-underline hover:text-red-600 ${
+                          theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                        }`}
+                      >
+                        ↳ {dictionary?.categories?.[child.slug] || child.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
             <Link
               href={`/${lang}/news`}

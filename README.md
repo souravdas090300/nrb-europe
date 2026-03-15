@@ -1,667 +1,228 @@
 # NRB Europe
 
-> A multilingual, full-stack news platform for Non-Resident Bangladeshis (NRBs) in Europe — built with Next.js 16, Sanity CMS, Prisma, Stripe, and more.
+Multilingual news platform for Non-Resident Bangladeshis in Europe, built with Next.js App Router, Sanity Studio, Prisma/PostgreSQL, Stripe, Resend, and NextAuth.
 
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
-[![Sanity](https://img.shields.io/badge/Sanity-v5-F03E2F?logo=sanity)](https://sanity.io/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?logo=tailwindcss)](https://tailwindcss.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-5-2D3748?logo=prisma)](https://www.prisma.io/)
+## What This Repo Contains
 
----
+- Public news site with locale-prefixed routes for English, Bengali, Spanish, German, and French
+- Embedded Sanity Studio at `/admin/studio` for editorial content
+- Prisma-backed authentication, subscriptions, comments, newsletter subscribers, and admin data
+- Stripe subscription checkout, portal, and webhook handling
+- PWA assets, RSS feed, sitemap generation, and Google News sitemap
+- Jest unit tests and Playwright E2E coverage
 
-## App Screenshots
+## Stack
 
-![NRB Europe Screenshot 1](src/app/nrb-europe%20project%201.png)
-
-![NRB Europe Screenshot 2](src/app/nrb-europe%20project2.png)
-
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Scripts](#scripts)
-- [Project Structure](#project-structure)
-- [Authentication](#authentication)
-- [Content Management (Sanity)](#content-management-sanity)
-- [Database (Prisma)](#database-prisma)
-- [Internationalization (i18n)](#internationalization-i18n)
-- [Payments (Stripe)](#payments-stripe)
-- [Email (Resend)](#email-resend)
-- [Security](#security)
-- [SEO & Performance](#seo--performance)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Documentation](#documentation)
-- [License](#license)
-
----
-
-## Overview
-
-**NRB Europe** is a production-grade multilingual news platform serving the NRB (Non-Resident Bangladeshi) community across Europe. It features a full editorial system powered by Sanity CMS, subscription billing via Stripe, Google OAuth + credentials authentication, real-time breaking news, comments, newsletters, PWA support, and comprehensive SEO optimizations.
-
-**Live URL:** [https://nrbeurope.com](https://nrbeurope.com)
-
----
-
-## Features
-
-### Content & Editorial
-- **Sanity CMS** with embedded Studio at `/admin/studio`
-- **14 news categories** (Europe, World, Politics, Business, Technology, Health, Science, Entertainment, Sports, Climate, Immigration, Jobs, Lifestyle, Travel)
-- **Rich text** via Portable Text with custom block content
-- **Hero, trending, latest & video** article sections
-- **Breaking news ticker** with live updates
-- **Scheduled content publishing** via cron API
-- **SEO metadata** per article (custom Sanity schema)
-
-### Multilingual (5 Languages)
-- English (default), Bengali (বাংলা), Spanish, German, French
-- URL-based locale routing (`/en/`, `/bn/`, `/es/`, `/de/`, `/fr/`)
-- Full dictionary-based translations for all UI text
-
-### Authentication & Users
-- **Google OAuth** + **email/password** credentials via NextAuth v4
-- Email verification flow (Resend)
-- Password reset with secure token
-- Brute-force protection & progressive delays
-- Role-based access: `admin`, `editor`, `subscriber`
-
-### Subscriptions & Payments
-- **Stripe Checkout** for monthly/yearly subscriptions
-- Stripe Customer Portal for self-service management
-- Webhook-driven payment lifecycle
-- Payment history tracking
-
-### Engagement
-- **Nested comments** with moderation (pending/approved/spam)
-- **Newsletter** subscriptions with send/unsubscribe flow
-- **PWA** — installable, offline page, service worker
-
-### Admin Dashboard
-- Analytics & stats overview
-- User management (list, edit, delete)
-- Category management (CRUD, hierarchical)
-- Subscription management
-- Newsletter composer & subscriber management
-- Embedded Sanity Studio
-
-### Security (Defense in Depth)
-- Rate limiting (per-API configurable)
-- Brute-force account lockout
-- CSRF double-submit cookie protection
-- Input sanitization (HTML, SQL injection, NoSQL injection)
-- Security headers (HSTS, CSP, COOP, CORP, X-Frame-Options)
-- Malicious bot/path blocking in middleware
-- Request ID tracing
-
-### SEO & Performance
-- Dynamic sitemap & news sitemap
-- RSS feed
-- Google News publisher page
-- Structured data (JSON-LD)
-- ISR (60-second revalidation)
-- Image optimization (AVIF/WebP, Sanity CDN + Unsplash)
-- Google Analytics integration
-
----
-
-## Tech Stack
-
-| Layer | Technology |
+| Area | Implementation |
 |---|---|
-| **Framework** | Next.js 16 (App Router) |
-| **Language** | TypeScript 5 |
-| **UI** | React 19, Tailwind CSS 3, Headless UI, Radix UI, Lucide Icons |
-| **CMS** | Sanity v5 + next-sanity 12 |
-| **Database** | PostgreSQL via Prisma 5 |
-| **Auth** | NextAuth v4 (Google OAuth + Credentials) |
-| **Payments** | Stripe (Checkout, Portal, Webhooks) |
-| **Email** | Resend |
-| **Cache** | Redis (ioredis) |
-| **Monitoring** | Sentry, Vercel Analytics |
-| **Charts** | Recharts |
-| **Testing** | Jest 29, React Testing Library, Playwright |
-| **Deployment** | Vercel / Netlify |
+| Framework | Next.js 16, React 19, App Router |
+| Styling | Tailwind CSS 3 |
+| CMS | Sanity v5, next-sanity |
+| Database | Prisma 5, PostgreSQL |
+| Auth | NextAuth v4 with Google OAuth and credentials |
+| Billing | Stripe Checkout, Billing Portal, Webhooks |
+| Email | Resend |
+| Caching | Redis + route revalidation |
+| Monitoring | Sentry, Vercel Analytics |
+| Testing | Jest, React Testing Library, Playwright |
 
----
-
-## Architecture
-
-```
-┌──────────────────────────────────────────────────────┐
-│                      Client (Browser)                │
-│  React 19 · Tailwind · PWA · i18n (5 locales)       │
-└──────────────┬───────────────────────┬───────────────┘
-               │                       │
-       SSR / ISR / CSR          REST API Routes
-               │                       │
-┌──────────────▼───────────────────────▼───────────────┐
-│              Next.js 16 (App Router)                 │
-│  Middleware (security + i18n) · Server Components    │
-│  API Routes · Sentry · Vercel Analytics              │
-├──────────────────────────────────────────────────────┤
-│                    Service Layer                      │
-│  NextAuth · Stripe · Resend · Redis · Security       │
-├──────────┬─────────────┬──────────────┬──────────────┤
-│ Sanity   │  PostgreSQL  │   Stripe     │   Resend     │
-│ (CMS)    │  (Prisma)    │   (Payments) │   (Email)    │
-└──────────┴─────────────┴──────────────┴──────────────┘
-```
-
----
-
-## Getting Started
+## Local Development
 
 ### Prerequisites
 
-- **Node.js** 20+
-- **npm** 9+
-- **PostgreSQL** database (local or hosted, e.g. Supabase, Neon)
-- **Sanity** project (free at [sanity.io](https://sanity.io))
-- **Stripe** account (for payments)
-- **Resend** account (for emails)
-- **Google Cloud** OAuth credentials (for Google sign-in)
+- Node.js 20+
+- npm 9+
+- PostgreSQL
+- A Sanity project
+- Stripe, Resend, and Google OAuth credentials if you want to exercise those flows locally
 
-### Installation
+### 1. Install dependencies
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/nrb-europe.git
-cd nrb-europe
-
-# 2. Install dependencies
 npm install --legacy-peer-deps
+```
 
-# 3. Set up environment variables
-cp .env.dev.example .env.dev   # Edit with your values (see below)
+### 2. Create local environment files
 
-# 4. Generate Prisma client
+This repo does not currently ship a committed `.env.example`. Create `.env.dev` manually and add the variables your flows need.
+
+Minimum local variables for the app to boot reliably:
+
+```env
+DATABASE_URL="postgresql://user:password@host:5432/nrb_europe"
+DIRECT_DATABASE_URL="postgresql://user:password@host:5432/nrb_europe"
+
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+
+NEXT_PUBLIC_SANITY_PROJECT_ID="your-project-id"
+NEXT_PUBLIC_SANITY_DATASET="production"
+NEXT_PUBLIC_SANITY_API_VERSION="2026-01-29"
+SANITY_API_TOKEN="your-sanity-token"
+
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+```
+
+Additional variables are required for specific features:
+
+- Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- Stripe: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_MONTHLY_PRICE_ID`, `STRIPE_YEARLY_PRICE_ID`, `STRIPE_WEBHOOK_SECRET`
+- Email: `RESEND_API_KEY`, `EMAIL_FROM`
+- Redis: `REDIS_URL`
+- Monitoring: `SENTRY_DSN`, `SENTRY_AUTH_TOKEN`
+- Analytics: `GOOGLE_ANALYTICS_ID`
+
+### 3. Generate Prisma client and migrate
+
+```bash
 npx prisma generate
-
-# 5. Run database migrations
 npm run db:migrate
+```
 
-# 6. (Optional) Seed admin user
+### 4. Optional setup tasks
+
+```bash
 npm run seed
-
-# 7. Deploy Sanity schema
 npm run deploy-schema
+```
 
-# 8. Start development server
+- `npm run seed` creates an admin user via `scripts/create-admin.ts`
+- `npm run deploy-schema` deploys the local Sanity schema definitions to the configured Sanity project
+
+### 5. Start the app
+
+```bash
 npm run dev
 ```
 
-The app will be available at **http://localhost:3000**.
+The `dev` script loads `.env.dev` automatically through `dotenv-cli`.
 
----
+## Useful Scripts
 
-## Environment Variables
-
-Create a `.env.dev` file for local development (loaded via `dotenv-cli`):
-
-```env
-# ── Database ──
-DATABASE_URL="postgresql://user:pass@host:5432/nrb_europe"
-DIRECT_DATABASE_URL="postgresql://user:pass@host:5432/nrb_europe"
-
-# ── NextAuth ──
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-random-secret-here"
-
-# ── Google OAuth ──
-GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# ── Sanity CMS ──
-NEXT_PUBLIC_SANITY_PROJECT_ID="your-sanity-project-id"
-NEXT_PUBLIC_SANITY_DATASET="production"
-SANITY_API_TOKEN="your-sanity-api-token"
-
-# ── Stripe ──
-STRIPE_SECRET_KEY="sk_test_..."
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="pk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
-STRIPE_MONTHLY_PRICE_ID="price_..."
-STRIPE_YEARLY_PRICE_ID="price_..."
-
-# ── Email (Resend) ──
-RESEND_API_KEY="re_..."
-EMAIL_FROM="NRB Europe <newsletter@nrbeurope.com>"
-
-# ── Redis ──
-REDIS_URL="redis://localhost:6379"
-
-# ── Sentry ──
-SENTRY_DSN="https://..."
-SENTRY_AUTH_TOKEN="..."
-
-# ── Analytics ──
-GOOGLE_ANALYTICS_ID="G-..."
-```
-
-For production, create `.env.prod` with production values.
-
----
-
-## Scripts
-
-| Command | Description |
+| Command | Purpose |
 |---|---|
-| `npm run dev` | Start dev server (loads `.env.dev`) |
+| `npm run dev` | Start the Next.js dev server with `.env.dev` |
 | `npm run build` | Production build |
-| `npm run build:dev` | Build with dev env vars |
-| `npm start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm test` | Run Jest unit tests |
-| `npm run test:watch` | Jest in watch mode |
-| `npm run test:coverage` | Jest with coverage report |
-| `npm run test:e2e` | Run Playwright E2E tests |
-| `npm run test:e2e:ui` | Playwright with UI mode |
-| `npm run db:migrate` | Run Prisma migrations (dev) |
-| `npm run db:push` | Push schema to DB without migration |
+| `npm run build:dev` | Build using `.env.dev` |
+| `npm run build:prod` | Build using `.env.prod` |
+| `npm start` | Start the production server |
+| `npm run start:prod` | Start with `.env.prod` |
+| `npm test` | Run Jest tests |
+| `npm run test:coverage` | Run Jest with coverage |
+| `npm run test:e2e` | Run Playwright tests |
+| `npm run db:migrate` | Run Prisma dev migrations |
+| `npm run db:migrate:prod` | Apply existing migrations in production |
+| `npm run db:push` | Push Prisma schema without creating a migration |
 | `npm run db:studio` | Open Prisma Studio |
-| `npm run db:migrate:prod` | Deploy migrations (production) |
-| `npm run deploy-schema` | Deploy Sanity schema to cloud |
-| `npm run seed` | Create admin user |
-| `npm run seo-audit` | Run SEO audit script |
+| `npm run deploy-schema` | Deploy Sanity schema |
+| `npm run seo-audit` | Run the SEO audit script |
 
----
+## Architecture Summary
 
-## Project Structure
+NRB Europe separates editorial content from application data:
 
-```
-nrb-europe/
-├── prisma/                     # Database schema & migrations
-│   ├── schema.prisma           # Prisma schema (9 models)
-│   └── migrations/             # SQL migration files
-├── public/                     # Static assets
-│   ├── manifest.json           # PWA manifest
-│   ├── robots.txt              # Robots rules
-│   ├── sw.js                   # Service worker
-│   └── sitemap.xml             # Generated sitemap
-├── scripts/                    # Utility scripts
-│   ├── create-admin.ts         # Admin user seeder
-│   ├── deploy.sh               # Deployment helper
-│   ├── seo-audit.js            # SEO audit tool
-│   └── setup-admin.js          # Admin setup wizard
-├── src/
-│   ├── middleware.ts            # Security + i18n middleware
-│   ├── app/
-│   │   ├── layout.tsx          # Root layout (Providers wrapper)
-│   │   ├── not-found.tsx       # Custom 404 page
-│   │   ├── robots.ts           # Dynamic robots.txt
-│   │   ├── sitemap.ts          # Dynamic sitemap
-│   │   ├── [lang]/             # Localized pages (5 locales)
-│   │   │   ├── layout.tsx      # Lang layout (Header, Footer, SEO)
-│   │   │   ├── page.tsx        # Homepage (ISR, 60s)
-│   │   │   ├── about/          # About page
-│   │   │   ├── accessibility/  # Accessibility statement
-│   │   │   ├── careers/        # Careers page
-│   │   │   ├── category/       # Category listing
-│   │   │   ├── contact/        # Contact form
-│   │   │   ├── cookies/        # Cookie policy
-│   │   │   ├── editorial-policy/
-│   │   │   ├── news/           # Article detail pages
-│   │   │   ├── privacy/        # Privacy policy
-│   │   │   ├── search/         # Search results
-│   │   │   └── terms/          # Terms of service
-│   │   ├── admin/              # Admin dashboard
-│   │   │   ├── page.tsx        # Admin home
-│   │   │   ├── dashboard/      # Analytics dashboard
-│   │   │   ├── categories/     # Category management
-│   │   │   ├── newsletter/     # Newsletter management
-│   │   │   ├── settings/       # Settings
-│   │   │   ├── subscriptions/  # Subscription management
-│   │   │   ├── users/          # User management
-│   │   │   └── studio/         # Embedded Sanity Studio
-│   │   ├── api/                # API routes (see API Reference below)
-│   │   ├── login/              # Sign-in page
-│   │   ├── register/           # Sign-up page
-│   │   ├── verify/             # Email verification
-│   │   ├── forgot-password/    # Password reset request
-│   │   ├── reset-password/     # Password reset form
-│   │   ├── profile/            # User profile
-│   │   ├── subscribe/          # Subscription plans
-│   │   ├── offline/            # PWA offline page
-│   │   ├── rss.xml/            # RSS feed
-│   │   └── news-sitemap.xml/   # Google News sitemap
-│   ├── components/
-│   │   ├── Analytics/          # Analytics components
-│   │   ├── auth/               # Providers, RequireAdmin
-│   │   ├── categories/         # Category UI components
-│   │   ├── comments/           # Comment system
-│   │   ├── layout/             # Header, Footer, AdminSidebar
-│   │   ├── media/              # Media/video components
-│   │   ├── newsletter/         # Newsletter signup
-│   │   ├── pwa/                # PWA install prompt, SW registration
-│   │   ├── sections/           # Hero, Trending, Latest, Video sections
-│   │   ├── seo/                # Structured data, meta tags
-│   │   ├── ui/                 # Shared UI (ThemeProvider, Logo, etc.)
-│   │   └── __tests__/          # Component tests
-│   ├── lib/
-│   │   ├── auth.ts             # NextAuth configuration
-│   │   ├── constants.ts        # Site constants & categories
-│   │   ├── email.ts            # Resend email helpers
-│   │   ├── get-dictionary.ts   # Dictionary loader
-│   │   ├── i18n-config.ts      # i18n locale configuration
-│   │   ├── prisma.ts           # Prisma client singleton
-│   │   ├── redis.ts            # Redis client
-│   │   ├── stripe.ts           # Stripe client
-│   │   ├── utils.ts            # Utility functions
-│   │   ├── dictionaries/       # Translation files (en, bn, es, de, fr)
-│   │   ├── data/               # Data helpers
-│   │   ├── sanity/             # Sanity client & helpers
-│   │   ├── security/           # Security module (6 files)
-│   │   └── __tests__/          # Library tests
-│   ├── sanity/
-│   │   ├── env.ts              # Sanity env variables
-│   │   ├── structure.ts        # Desk structure
-│   │   ├── admin/              # Custom document actions
-│   │   ├── lib/                # Sanity client library
-│   │   ├── queries/            # GROQ queries
-│   │   ├── schemaTypes/        # Schema definitions
-│   │   └── shared/             # Shared Sanity utilities
-│   ├── styles/
-│   │   └── globals.css         # Global styles + Tailwind
-│   └── types/                  # TypeScript type definitions
-├── tests/
-│   └── e2e/                    # Playwright E2E tests
-│       ├── homepage.spec.ts
-│       ├── language-switching.spec.ts
-│       ├── navigation.spec.ts
-│       ├── responsive.spec.ts
-│       └── search.spec.ts
-├── sanity.config.ts            # Sanity Studio configuration
-├── sanity.cli.ts               # Sanity CLI configuration
-├── next.config.mjs             # Next.js configuration
-├── tailwind.config.js          # Tailwind configuration
-├── playwright.config.ts        # Playwright configuration
-├── jest.config.js              # Jest configuration
-├── vercel.json                 # Vercel deployment config
-├── netlify.toml                # Netlify deployment config
-└── package.json                # Dependencies & scripts
+- Sanity owns articles, authors, live updates, sponsors, SEO fields, and Studio workflows
+- Prisma/PostgreSQL owns users, auth records, subscriptions, payments, comments, newsletter subscribers, and admin-managed categories
+- Next.js App Router serves both the public site and admin UI
+- Middleware adds request filtering, request IDs, and locale redirects
+- Stripe, Resend, Redis, and Sentry are integrated at the route and service layer
+
+One important implementation detail: category data used by the public app is database-backed. Admin category changes are revalidated immediately and can be synced into Sanity when needed.
+
+### Category & Subcategory System
+
+Categories support up to two levels of hierarchy (parent → subcategory):
+
+- **Admin management** — create, edit, delete, enable/disable categories and subcategories via `/admin/categories`. Subcategories appear indented under their parent in the table.
+- **Sanity sync** — every create/update/delete automatically syncs to Sanity so editors can tag articles with both parent categories and subcategories. A one-shot **Sync to Sanity** button backfills all existing categories.
+- **Navigation** — top-level categories appear in the sticky header nav bar. Those that have subcategories show a hover dropdown on desktop; the hamburger menu indents subcategories below their parent.
+- **Category pages** — `/[lang]/category/[slug]` works for all categories, including admin-created ones. Subcategory pages show a parent breadcrumb; parent category pages show subcategory chips for quick navigation.
+- **Metadata & static params** — `generateStaticParams` merges Sanity slugs, constant category slugs, and DB-created category slugs so all category pages are pre-built at deploy time.
+- **Public API** — `GET /api/categories` returns a tree structure (root categories with `children` arrays) so any component can render the full hierarchy without additional requests.
+
+## Key Routes
+
+### Public pages
+
+- `/{lang}` home page
+- `/{lang}/news` and `/{lang}/news/[slug]`
+- `/{lang}/category/[slug]`
+- `/{lang}/search`
+- `/categories`
+- `/login`, `/register`, `/forgot-password`, `/reset-password`, `/verify`, `/profile`, `/subscribe`
+
+### Admin pages
+
+- `/admin`
+- `/admin/categories`
+- `/admin/dashboard`
+- `/admin/newsletter`
+- `/admin/settings`
+- `/admin/subscriptions`
+- `/admin/users`
+- `/admin/studio`
+
+### API groups
+
+- `/api/auth/*`
+- `/api/admin/*`
+- `/api/categories`
+- `/api/comments`
+- `/api/newsletter/*`
+- `/api/search`
+- `/api/stripe/*`
+- `/api/webhooks/*`
+
+## Project Layout
+
+```text
+src/
+  app/                  Next.js routes, layouts, metadata routes, API handlers
+  components/           Reusable UI and feature components
+  lib/                  Auth, email, Prisma, Redis, Stripe, security, i18n helpers
+  sanity/               Studio config, schema types, GROQ queries, admin plugins
+  styles/               Global styles
+  types/                Shared TypeScript types
+prisma/                 Database schema and migrations
+scripts/                Utility scripts for admin setup, build, and audits
+docs/                   Additional project documentation
+tests/e2e/              Playwright coverage
 ```
 
----
+## Sanity Schema Types
 
-## Authentication
+The local Studio schema currently includes:
 
-Powered by **NextAuth v4** with JWT session strategy.
+- `post`
+- `author`
+- `category`
+- `liveUpdate`
+- `seo`
+- `sponsor`
+- `user`
+- `blockContent`
 
-### Providers
-
-| Provider | Flow |
-|---|---|
-| **Google OAuth** | One-click sign-in via Google |
-| **Credentials** | Email + password with bcrypt hashing |
-
-### Auth Flow
-
-1. **Registration** (`POST /api/auth/register`): Validates input → hashes password (bcrypt, 12 rounds) → creates user → generates verification token → sends verification email
-2. **Email Verification** (`GET /api/auth/verify?token=xxx`): Validates token → marks `emailVerified` → deletes token
-3. **Sign In** (`POST /api/auth/[...nextauth]`): Brute-force check → progressive delay → password comparison → email verification check → JWT issued
-4. **Password Reset**: Request (`POST /api/auth/forgot-password`) → email with token → reset (`POST /api/auth/reset-password`)
-
-### Roles
-
-| Role | Access |
-|---|---|
-| `subscriber` | Read articles, comment, manage profile |
-| `editor` | Subscriber + Sanity Studio access |
-| `admin` | Full access: dashboard, user mgmt, settings |
-
----
-
-## Content Management (Sanity)
-
-### Sanity Studio
-
-Embedded at `/admin/studio` with custom desk structure.
-
-**Project:** `j28hbvrr` · **Dataset:** `production` · **API Version:** `2026-01-29`
-
-### Schema Types
-
-| Type | Description |
-|---|---|
-| `post` | News articles with rich text, categories, authors, SEO |
-| `author` | Journalist/author profiles |
-| `category` | News categories |
-| `seo` | Reusable SEO metadata (title, description, OG image) |
-| `blockContent` | Portable Text block definitions |
-
-### Queries
-
-GROQ queries are centralized in `src/sanity/queries/articleQueries.ts`.
-
----
-
-## Database (Prisma)
-
-**PostgreSQL** with 9 models:
-
-| Model | Purpose |
-|---|---|
-| `User` | Users with roles, Stripe customer ID, newsletter opt-in |
-| `Account` | NextAuth OAuth accounts (Google) |
-| `Session` | NextAuth sessions |
-| `VerificationToken` | Email verification & password reset tokens |
-| `Subscription` | Stripe subscription state (plan, status, period) |
-| `Payment` | Stripe payment records |
-| `Comment` | Nested comments with moderation status |
-| `NewsletterSubscriber` | Independent newsletter subscriptions |
-| `Category` | Hierarchical categories (parent/child) |
-
-### Useful Commands
-
-```bash
-npm run db:migrate       # Create & apply new migration
-npm run db:push          # Push schema without migration
-npm run db:studio        # Open Prisma Studio GUI
-npm run db:migrate:prod  # Deploy migrations to production
-```
-
----
-
-## Internationalization (i18n)
-
-### Supported Locales
-
-| Code | Language |
-|---|---|
-| `en` | English (default) |
-| `bn` | Bengali (বাংলা) |
-| `es` | Spanish (Español) |
-| `de` | German (Deutsch) |
-| `fr` | French (Français) |
-
-### How It Works
-
-- URL-based routing: `/en/about`, `/bn/about`, `/de/about`
-- Middleware detects locale from: cookie (`NEXT_LOCALE`) → `Accept-Language` header → fallback `en`
-- Dictionary files in `src/lib/dictionaries/{locale}.ts`
-- Pages load dictionaries via `getDictionary(lang)` and pass to components
-- System routes (`/api`, `/admin`, `/login`, etc.) bypass locale routing
-
----
-
-## Payments (Stripe)
-
-### Subscription Plans
-
-- **Monthly** and **Yearly** plans configured via Stripe Price IDs
-- Checkout via Stripe Checkout Sessions
-- Self-service management via Stripe Customer Portal
-
-### API Endpoints
-
-| Endpoint | Method | Description |
-|---|---|---|
-| `/api/stripe/create-checkout` | POST | Create Stripe Checkout session |
-| `/api/stripe/portal` | POST | Create Customer Portal session |
-| `/api/stripe/webhook` | POST | Handle Stripe webhook events |
-
----
-
-## Email (Resend)
-
-Email sending via [Resend](https://resend.com).
-
-### Email Types
-
-| Function | Purpose |
-|---|---|
-| `sendVerificationEmail()` | Account email verification |
-| `sendWelcomeEmail()` | Welcome message after verification |
-| `sendPasswordResetEmail()` | Password reset link |
-| `sendEmail()` | Generic email sender |
-
-### Configuration
-
-- Set `RESEND_API_KEY` in environment
-- Set `EMAIL_FROM` for sender address (requires verified domain in Resend)
-- Default fallback: `onboarding@resend.dev` (for testing only)
-
-> **Important:** You must verify your domain at [resend.com/domains](https://resend.com/domains) to send emails to addresses other than your Resend account email.
-
----
-
-## Security
-
-The application implements defense-in-depth security across multiple layers:
-
-### Middleware Layer (`src/middleware.ts`)
-- Malicious user-agent blocking (sqlmap, nikto, nmap, etc.)
-- Attack path blocking (path traversal, WordPress probes, SQL injection in URLs)
-- URL length limits (2048 chars) and null byte rejection
-- Request ID tracing (`X-Request-Id`)
-
-### API Security (`src/lib/security/`)
-
-| Module | Description |
-|---|---|
-| `rate-limit.ts` | Sliding-window rate limiting (configurable per route) |
-| `brute-force.ts` | Account lockout after failed attempts (20/IP, 5/email) |
-| `csrf.ts` | Double-submit cookie CSRF protection |
-| `sanitize.ts` | Input sanitization (HTML, SQL/NoSQL injection, URL validation) |
-| `api-security.ts` | Unified `withSecurity()` wrapper combining all protections |
-
-### HTTP Security Headers
-- `Strict-Transport-Security` (HSTS, 2 years, preload)
-- `Content-Security-Policy` (strict CSP with allowed origins)
-- `X-Frame-Options: SAMEORIGIN`
-- `X-Content-Type-Options: nosniff`
-- `Cross-Origin-Opener-Policy`, `Cross-Origin-Resource-Policy`
-- `Permissions-Policy` (camera, microphone, geolocation disabled)
-
----
-
-## SEO & Performance
-
-- **ISR** — Incremental Static Regeneration (60-second revalidation on homepage)
-- **Dynamic Sitemap** — `sitemap.ts` generates XML sitemap
-- **News Sitemap** — `/news-sitemap.xml` for Google News
-- **RSS Feed** — `/rss.xml` for feed readers
-- **Structured Data** — Organization JSON-LD on all pages
-- **OpenGraph & Twitter Cards** — Full metadata per page/article
-- **Image Optimization** — AVIF/WebP, Sanity CDN + Unsplash, responsive sizes
-- **Google Analytics** — Integrated via `GoogleAnalytics` component
-- **robots.txt** — Dynamic generation via `robots.ts`
-- **SEO Audit** — Run `npm run seo-audit` for automated checks
-
----
+Studio configuration lives in `sanity.config.ts` and `src/sanity/schemaTypes/index.ts`.
 
 ## Testing
 
-### Unit Tests (Jest)
+- Jest configuration: `jest.config.js`
+- Playwright configuration: `playwright.config.ts`
+- Current coverage artifacts are committed under `coverage/` and browser reports under `playwright-report/`
 
-```bash
-npm test                  # Run all unit tests
-npm run test:watch        # Watch mode
-npm run test:coverage     # With coverage report
-```
+## Deployment Notes
 
-- **Environment:** jsdom
-- **Libraries:** React Testing Library, jest-dom
-- **Coverage:** Source files in `src/` (excluding types, stories, test files)
-
-### E2E Tests (Playwright)
-
-```bash
-npm run test:e2e          # Run all E2E tests
-npm run test:e2e:ui       # Interactive UI mode
-```
-
-- **5 test suites:** Homepage, Navigation, Language Switching, Search, Responsive
-- **5 browser targets:** Chromium, Firefox, WebKit, Mobile Chrome (Pixel 5), Mobile Safari (iPhone 12)
-- Auto-starts dev server on `http://localhost:3000`
-- 2 retries on CI, HTML reporter
-
----
-
-## Deployment
-
-### Vercel (Primary)
-
-The project includes a `vercel.json`:
-
-```bash
-# Deploy
-vercel --prod
-```
-
-**Required:** Set all environment variables in Vercel dashboard.
-
-### Netlify (Alternative)
-
-The project includes a `netlify.toml` with:
-- Build: `prisma generate && prisma migrate deploy && npm run build`
-- Node 20, API redirect to Netlify Functions
-- Security headers and static asset caching
-
-```bash
-# Deploy
-netlify deploy --prod
-```
-
-### Production Checklist
-
-- [ ] Set all environment variables (see [Environment Variables](#environment-variables))
-- [ ] Verify domain in Resend for email delivery
-- [ ] Add OAuth redirect URIs in Google Cloud Console
-- [ ] Configure Stripe webhook endpoint
-- [ ] Run `npm run db:migrate:prod` for database migrations
-- [ ] Run `npm run deploy-schema` to deploy Sanity schema
-- [ ] Verify `NEXTAUTH_URL` matches your production domain exactly
-
----
+- Vercel builds run through `scripts/vercel-build.js`, which validates Postgres URLs and runs `prisma migrate deploy` for production deployments
+- Netlify uses `netlify.toml` to generate Prisma client, run migrations, and build the app
+- Production secrets should live in the hosting platform, not in committed env files
 
 ## Documentation
 
-Detailed documentation is available in the [docs/](docs/) folder:
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DEPLOYMENT.md`
+- `docs/SECURITY.md`
 
-| Document | Description |
-|---|---|
-| [docs/API.md](docs/API.md) | Complete API reference (all endpoints) |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture & design decisions |
-| [docs/SECURITY.md](docs/SECURITY.md) | Security implementation details |
-| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Deployment guide & checklist |
+## Known Mismatch Worth Fixing
 
----
-
-## License
-
-This project is private and proprietary.
-
----
-
-<p align="center">Built with ❤️ by the NRB Europe team</p>
+The current client subscription page expects a checkout `url`, while `src/app/api/stripe/create-checkout/route.ts` returns a `sessionId`. That is an application bug, not a documentation issue.

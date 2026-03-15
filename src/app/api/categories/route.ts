@@ -17,44 +17,36 @@ export async function GET() {
         parentId: true,
         sortOrder: true,
         isActive: true,
-        createdAt: true,
-        updatedAt: true,
       },
-      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     })
 
-    const byId = new Map(
-      categories.map((category) => [
-        category.id,
-        {
-          ...category,
-          children: [] as Array<{
-            id: string
-            name: string
-            slug: string
-            color: string
-            description: string | null
-            parentId: string | null
-            sortOrder: number
-            isActive: boolean
-            createdAt: Date
-            updatedAt: Date
-          }>,
-        },
-      ])
-    )
-
-    const rootCategories: Array<ReturnType<typeof byId.get> extends infer T ? Exclude<T, undefined> : never> = []
-
-    for (const category of Array.from(byId.values())) {
-      if (category.parentId && byId.has(category.parentId)) {
-        byId.get(category.parentId)!.children.push(category)
-        continue
-      }
-      rootCategories.push(category)
+    type CatNode = {
+      id: string
+      name: string
+      slug: string
+      color: string
+      description: string | null
+      parentId: string | null
+      sortOrder: number
+      isActive: boolean
+      children: CatNode[]
     }
 
-    return NextResponse.json(categories, {
+    const byId = new Map<string, CatNode>(
+      categories.map((c) => [c.id, { ...c, children: [] }])
+    )
+
+    const rootCategories: CatNode[] = []
+    for (const node of Array.from(byId.values())) {
+      if (node.parentId && byId.has(node.parentId)) {
+        byId.get(node.parentId)!.children.push(node)
+      } else {
+        rootCategories.push(node)
+      }
+    }
+
+    return NextResponse.json(rootCategories, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },

@@ -1,255 +1,130 @@
 # Architecture
 
-System architecture and design decisions for NRB Europe.
+This document describes the runtime boundaries and data ownership in NRB Europe.
 
----
+## High-Level View
 
-## High-Level Architecture
-
-```
-                       ┌───────────────────────────┐
-                       │      CDN / Edge Layer      │
-                       │   (Vercel / Netlify Edge)  │
-                       └─────────────┬─────────────┘
-                                     │
-                       ┌─────────────▼─────────────┐
-                       │     Next.js 16 Runtime     │
-                       │      (App Router, SSR)     │
-                       │                            │
-                       │  ┌──────────────────────┐  │
-                       │  │   Middleware Layer    │  │
-                       │  │ Security + i18n + ID  │  │
-                       │  └──────────┬───────────┘  │
-                       │             │              │
-                       │  ┌──────────▼───────────┐  │
-                       │  │   App Router Pages   │  │
-                       │  │  Server Components   │  │
-                       │  │  Client Components   │  │
-                       │  └──────────┬───────────┘  │
-                       │             │              │
-                       │  ┌──────────▼───────────┐  │
-                       │  │    API Routes Layer   │  │
-                       │  │  REST API Handlers    │  │
-                       │  └──────────┬───────────┘  │
-                       └─────────────┼─────────────┘
-                                     │
-            ┌─────────┬──────────┬───┴────┬──────────┬──────────┐
-            │         │          │        │          │          │
-    ┌───────▼───┐ ┌───▼────┐ ┌──▼───┐ ┌──▼───┐ ┌───▼───┐ ┌───▼────┐
-    │  Sanity   │ │Prisma/ │ │Stripe│ │Resend│ │ Redis │ │ Sentry │
-    │  (CMS)    │ │Postgres│ │(Pay) │ │(Mail)│ │(Cache)│ │ (Logs) │
-    └───────────┘ └────────┘ └──────┘ └──────┘ └───────┘ └────────┘
+```text
+Browser
+  -> Next.js 16 App Router
+    -> Middleware (security filters, request ID, locale redirect)
+    -> Server components and route handlers
+      -> Sanity Content Lake
+      -> Prisma + PostgreSQL
+      -> Stripe
+      -> Resend
+      -> Redis
+      -> Sentry
 ```
 
----
+## Runtime Surfaces
 
-## Design Principles
+### Public site
 
-### 1. Server-First Rendering
-- Pages use **React Server Components** by default
-- Client components (`'use client'`) only where interactivity is needed (Header, forms, theme toggle)
-- **ISR** (Incremental Static Regeneration) for content pages with 60-second revalidation
-- **Static generation** for locale pages via `generateStaticParams()`
+- Locale-prefixed article and category pages under `src/app/[lang]`
+- Non-localized auth and account pages under `src/app`
+- Metadata routes for sitemap, news sitemap, robots, and RSS
 
-### 2. Separation of Concerns
-- **CMS (Sanity):** All editorial content — articles, authors, categories, SEO metadata
-- **Database (Prisma/PostgreSQL):** User data, auth, subscriptions, payments, comments, newsletter subscribers
-- **No content duplication:** Sanity is the source of truth for articles; Prisma for user/transactional data
+### Admin experience
 
-### 3. Security by Default
-Every API route can be wrapped with `withSecurity()` which provides rate limiting, auth checks, input sanitization, CSRF protection, and security headers in a single composable wrapper.
+- App admin pages under `src/app/admin`
+- Embedded Sanity Studio under `src/app/admin/studio/[[...tool]]`
+- Admin APIs under `src/app/api/admin`
 
-### 4. Internationalization as a First-Class Concern
-- URL-based locale routing (`/en/`, `/bn/`, etc.) — not query params or cookies alone
-- Middleware-level locale detection and redirect
-- Type-safe dictionaries with full coverage
+### API layer
 
----
+Route handlers in `src/app/api` provide auth, newsletter, comments, categories, Stripe billing, search, live updates, cron hooks, and webhook integrations.
 
-## Request Lifecycle
+## Data Ownership
 
-```
-1. Client Request
-       │
-2. Edge/CDN (cached static assets returned here)
-       │
-3. Middleware (src/middleware.ts)
-   ├── Block malicious bots
-   ├── Block attack paths
-   ├── Reject oversized URLs / null bytes
-   ├── Add X-Request-Id
-   ├── Skip locale routing for /api, /admin, /login, etc.
-   └── Redirect to locale if missing (/about → /en/about)
-       │
-4. Route Handler
-   ├── [Page Route] → Server Component → Fetch from Sanity/Prisma → Render
-   └── [API Route] → withSecurity() → Business Logic → JSON Response
-       │
-5. Response with security headers
-```
+### Sanity owns editorial content
 
----
+- Posts
+- Authors
+- SEO objects
+- Live updates and breaking-news content
+- Sponsors
+- Studio workflow and desk structure
 
-## Data Flow
+Relevant code:
 
-### Content (Read Path)
-```
-Sanity CMS ──GROQ Query──► Next.js Server Component ──HTML──► Browser
-                                    │
-                            (ISR cache: 60s)
-```
+- `src/sanity/schemaTypes`
+- `src/sanity/queries`
+- `sanity.config.ts`
 
-### User Actions (Write Path)
-```
-Browser ──POST──► API Route ──withSecurity()──► Prisma/Stripe/Resend ──► Response
-```
+### Prisma/PostgreSQL owns application state
 
-### Real-time
-```
-Sanity Webhook ──POST──► /api/webhooks/sanity ──► Revalidate ISR cache
-Sanity Webhook ──POST──► /api/webhooks/breaking-news ──► Push update
-```
+- Users, accounts, sessions, verification tokens
+- Subscriptions and payments
+- Comments
+- Newsletter subscribers
+- Admin-managed categories
 
----
+Relevant code:
 
-## Component Architecture
+- `prisma/schema.prisma`
+- `src/lib/prisma.ts`
+- `src/app/api/admin/*`
 
-### Page Components (Server)
-```
-[lang]/page.tsx (Server Component)
-  ├── Fetches data from Sanity (parallel GROQ queries)
-  ├── Passes data to section components
-  └── Renders:
-       ├── HeroSection (server)
-       ├── LatestStories (server)
-       ├── TrendingStories (server)
-       ├── VideoSection (server)
-       └── Newsletter (client — form interactivity)
-```
+### Categories are intentionally DB-backed in the app
 
-### Layout Hierarchy
-```
-RootLayout (src/app/layout.tsx)
-  └── Providers (SessionProvider)
-       └── LangLayout (src/app/[lang]/layout.tsx)
-            ├── ThemeProvider
-            ├── GoogleAnalytics
-            ├── BreakingNewsTicker
-            ├── Header (client — state, menus)
-            ├── {children} (page content)
-            ├── Footer
-            ├── PWAInstallPrompt
-            └── ServiceWorkerRegistration
-```
+Categories are managed from the app admin area and exposed publicly from `GET /api/categories`. Admin mutations revalidate category-related pages immediately. There is also an admin sync route to mirror database categories into Sanity when editorial tooling needs them.
 
-### Admin Layout
-```
-AdminLayout (src/app/admin/layout.tsx)
-  └── RequireAdmin (client — session check)
-       ├── AdminSidebar
-       └── {children} (admin page)
+That means the public site should not assume Sanity is the only source of truth for category navigation.
+
+## Request Flow
+
+### Page request
+
+1. Request hits Next.js middleware.
+2. Known attack paths and blocked user agents are rejected early.
+3. Missing locale prefixes are redirected to the best matching locale.
+4. The route renders with server components.
+5. Content comes from Sanity and app state comes from Prisma or other services.
+
+### API request
+
+1. Request reaches an App Router route handler.
+2. Security wrappers may enforce auth, role checks, rate limits, and sanitization.
+3. Business logic calls Prisma, Sanity, Stripe, Redis, or Resend.
+4. The handler returns JSON or HTML depending on the endpoint.
+
+## Caching and Revalidation
+
+- Article and page rendering relies on Next.js caching and revalidation behavior where configured
+- Search and comments use Redis-backed caching helpers
+- Public categories are served with `Cache-Control: no-store` to avoid stale navigation data
+- Category admin changes trigger explicit revalidation of category-related views
+- Sanity webhooks support content refresh flows for editorial updates
+
+## Authentication Model
+
+- NextAuth v4 with JWT sessions
+- Google OAuth and email/password credentials
+- Role values stored in Prisma user records: `admin`, `editor`, `subscriber`
+- Admin UI and admin APIs enforce role checks on top of authentication
+
+## Billing Model
+
+- Subscription plans are defined in `src/lib/stripe.ts`
+- Checkout begins at `POST /api/stripe/create-checkout`
+- Self-service billing portal is exposed via `POST /api/stripe/portal`
+- Stripe webhooks persist subscription and payment changes into Prisma
+
+## Repo Structure by Responsibility
+
+```text
+src/app            Routes, layouts, metadata routes, and APIs
+src/components     Feature and shared UI components
+src/lib            Service-layer helpers and integration code
+src/sanity         Studio, schema, queries, and Sanity-specific admin tooling
+prisma             Relational schema and migrations
+scripts            Build and setup helpers
+tests/e2e          End-to-end coverage
 ```
 
----
+## Operational Notes
 
-## Database Schema Relationships
-
-```
-User
- ├── 1:N → Account (OAuth providers)
- ├── 1:N → Session
- ├── 1:N → Subscription (Stripe)
- ├── 1:N → Payment (Stripe)
- └── 1:N → Comment
-          └── self-referential (parent/replies)
-
-Category
- └── self-referential (parent/children)
-
-VerificationToken (standalone)
-NewsletterSubscriber (standalone)
-```
-
----
-
-## Sanity Schema Relationships
-
-```
-Post
- ├── N:1 → Author (reference)
- ├── N:M → Category (array of references)
- └── 1:1 → SEO (embedded object)
-
-Author (standalone)
-Category (standalone)
-```
-
----
-
-## Authentication Architecture
-
-```
-┌─────────┐     ┌──────────────┐     ┌─────────┐
-│ Browser  │────►│  NextAuth    │────►│ Prisma  │
-│          │     │  (JWT mode)  │     │ (Users) │
-└─────────┘     └──────┬───────┘     └─────────┘
-                       │
-         ┌─────────────┼─────────────┐
-         │             │             │
-    ┌────▼────┐  ┌─────▼─────┐  ┌───▼────┐
-    │ Google  │  │Credentials│  │ Brute  │
-    │ OAuth   │  │ (bcrypt)  │  │ Force  │
-    └─────────┘  └───────────┘  │ Guard  │
-                                └────────┘
-```
-
-**Session Strategy:** JWT (not database sessions) for better serverless performance.
-
-**Token Payload:**
-```typescript
-{
-  id: string      // User ID
-  email: string   // User email
-  name: string    // User name
-  role: string    // admin | editor | subscriber
-}
-```
-
----
-
-## Caching Strategy
-
-| Layer | Mechanism | TTL |
-|---|---|---|
-| **Page Cache** | Next.js ISR | 60 seconds |
-| **Static Assets** | CDN / `_next/static` | 1 year (immutable) |
-| **Images** | Next.js Image Optimization | 24 hours |
-| **API Responses** | No caching (dynamic) | — |
-| **Redis** | Session/rate-limit data | Varies |
-| **Sanity CDN** | Sanity managed | Instant on publish |
-
----
-
-## Error Handling
-
-| Layer | Strategy |
-|---|---|
-| **API Routes** | try/catch → Sentry capture → JSON error response |
-| **Server Components** | error.tsx boundaries, not-found.tsx |
-| **Client Components** | React error boundaries |
-| **Middleware** | Status code responses (403, 404, 400, 414) |
-| **External Services** | Graceful degradation (email failure doesn't block registration) |
-
----
-
-## Key Design Decisions
-
-| Decision | Rationale |
-|---|---|
-| **Sanity for CMS, Prisma for users** | Sanity excels at content modeling; Prisma for relational user/payment data |
-| **JWT sessions** | Serverless-friendly, no DB lookup per request |
-| **URL-based i18n** | SEO-friendly, each locale has unique URLs for indexing |
-| **In-memory rate limiting** | Simple, no external dependency needed for moderate traffic |
-| **Defense-in-depth security** | Multiple layers (middleware + API wrapper + headers) |
-| **Resend for email** | Modern API, good DX, simple integration |
-| **App Router** | Latest Next.js patterns, server components, streaming |
+- Vercel production builds are expected to run Prisma migrations during build via `scripts/vercel-build.js`
+- The middleware is part security layer and part i18n router; documentation should treat both as first-class behavior
+- The subscription flow currently has a client/server response mismatch around checkout redirection, which should be fixed in application code separately from this documentation pass
