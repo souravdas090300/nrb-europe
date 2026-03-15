@@ -37,14 +37,27 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export const revalidate = 60 // Revalidate every minute
 
+async function getDbCategoryBySlug(slug: string) {
+  if (!process.env.DATABASE_URL) {
+    return null
+  }
+
+  try {
+    return await prisma.category.findFirst({
+      where: { slug, isActive: true },
+      select: { name: true, description: true },
+    })
+  } catch (error) {
+    console.error('Error fetching DB category by slug:', error)
+    return null
+  }
+}
+
 export default async function CategoryPage({ params }: { params: Promise<{ slug: string, lang: Locale }> }) {
   const { slug, lang } = await params
   const [sanityCategory, dbCategory, dictionary] = await Promise.all([
     getCategoryBySlug(slug),
-    prisma.category.findFirst({
-      where: { slug, isActive: true },
-      select: { name: true, description: true },
-    }),
+    getDbCategoryBySlug(slug),
     getDictionary(lang),
   ])
 

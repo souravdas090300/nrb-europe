@@ -69,31 +69,39 @@ type HomeCategory = {
 
 async function getHomeData() {
   try {
-    const [heroArticles, latestArticles, trendingArticles, videoArticles, homeCategories] = await Promise.all([
+    const [heroArticles, latestArticles, trendingArticles, videoArticles] = await Promise.all([
       client.fetch(heroArticlesQuery),
       client.fetch(latestArticlesQuery),
       client.fetch(trendingArticlesQuery),
       client.fetch(videoArticlesQuery),
-      prisma.category.findMany({
-        where: { isActive: true, parentId: null },
-        orderBy: { sortOrder: 'asc' },
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-          description: true,
-          children: {
-            where: { isActive: true },
-            orderBy: { sortOrder: 'asc' },
-            select: {
-              id: true,
-              name: true,
-              slug: true,
+    ])
+
+    let homeCategories: HomeCategory[] = []
+    if (process.env.DATABASE_URL) {
+      try {
+        homeCategories = await prisma.category.findMany({
+          where: { isActive: true, parentId: null },
+          orderBy: { sortOrder: 'asc' },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            description: true,
+            children: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              },
             },
           },
-        },
-      }),
-    ])
+        })
+      } catch (error) {
+        console.error('Error fetching homepage categories:', error)
+      }
+    }
 
     return {
       heroArticles,
