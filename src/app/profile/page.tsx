@@ -43,10 +43,14 @@ export default function ProfilePage() {
       router.push('/login')
       return
     }
+    if (status === 'authenticated' && session?.user?.role === 'admin') {
+      router.replace('/admin/profile')
+      return
+    }
     if (status === 'authenticated') {
       fetchProfile()
     }
-  }, [status, router])
+  }, [status, router, session?.user?.role])
 
   const fetchProfile = async () => {
     try {
@@ -158,14 +162,6 @@ export default function ProfilePage() {
             >
               Home
             </Link>
-            {profile.role === 'admin' && (
-              <Link
-                href="/admin"
-                className="text-sm text-blue-600 hover:underline"
-              >
-                Dashboard
-              </Link>
-            )}
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               className="text-sm text-red-600 hover:underline"

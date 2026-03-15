@@ -109,7 +109,7 @@ function LoginForm() {
 
         if (safeCallbackUrl) {
           if (safeCallbackUrl.startsWith('/admin') && role !== 'admin') {
-            router.push('/profile?error=admin_required')
+            router.push('/login?error=admin_required')
           } else {
             router.push(safeCallbackUrl)
           }

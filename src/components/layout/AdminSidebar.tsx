@@ -6,6 +6,7 @@ import { signOut } from 'next-auth/react'
 
 const adminNav = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
+  { href: '/admin/profile', label: 'Profile', icon: '👤' },
   { href: '/admin/categories', label: 'Categories', icon: '📁' },
   { href: '/admin/users', label: 'Users', icon: '👥' },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: '💳' },
@@ -43,7 +44,7 @@ export default function AdminSidebar({ children }: { children: React.ReactNode }
           })}
           <div className="flex-1" />
           <button
-            onClick={() => signOut()}
+            onClick={() => signOut({ callbackUrl: '/admin-login' })}
             className="flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 whitespace-nowrap transition-colors"
           >
             🚪 <span className="hidden sm:inline">Sign Out</span>

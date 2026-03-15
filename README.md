@@ -129,6 +129,13 @@ NRB Europe separates editorial content from application data:
 
 One important implementation detail: category data used by the public app is database-backed. Admin category changes are revalidated immediately and can be synced into Sanity when needed.
 
+Admin and user account surfaces are intentionally separated:
+
+- `/profile` is the standard end-user account page.
+- `/admin/*` is the restricted administrator workspace.
+- `/admin/profile` is the administrator-only profile/settings page.
+- Admin guards redirect non-admin users to the sign-in flow instead of the end-user profile page.
+
 ### Category & Subcategory System
 
 Categories support up to two levels of hierarchy (parent → subcategory):
@@ -154,6 +161,7 @@ Categories support up to two levels of hierarchy (parent → subcategory):
 ### Admin pages
 
 - `/admin`
+- `/admin/profile`
 - `/admin/categories`
 - `/admin/dashboard`
 - `/admin/newsletter`

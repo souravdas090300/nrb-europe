@@ -50,7 +50,7 @@ describe('RequireAdmin', () => {
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
   })
 
-  it('redirects to profile when user is not admin', () => {
+  it('redirects to login when user is not admin', () => {
     mockUseSession.mockReturnValue({
       data: { user: { role: 'subscriber', email: 'user@test.com' } },
       status: 'authenticated',
@@ -62,7 +62,7 @@ describe('RequireAdmin', () => {
       </RequireAdmin>
     )
 
-    expect(mockReplace).toHaveBeenCalledWith('/profile?error=admin_required')
+    expect(mockReplace).toHaveBeenCalledWith('/login?error=admin_required')
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument()
   })
 

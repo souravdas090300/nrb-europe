@@ -16,7 +16,7 @@ export default function RequireAdmin({ children }: { children: React.ReactNode }
     }
 
     if (session.user.role !== 'admin') {
-      router.replace('/profile?error=admin_required')
+      router.replace('/login?error=admin_required')
     }
   }, [session, status, router])
 

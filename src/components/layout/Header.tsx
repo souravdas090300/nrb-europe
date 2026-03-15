@@ -49,6 +49,7 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
   const [currentDate, setCurrentDate] = useState('')
   const { data: session } = useSession()
   const pathname = usePathname()
+  const profileHref = session?.user?.role === 'admin' ? '/admin/profile' : '/profile'
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 20)
@@ -272,10 +273,18 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                     <Link href="/admin" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
                       Dashboard
                     </Link>
+                    <Link href="/admin/profile" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
+                      Admin Profile
+                    </Link>
                     <Link href="/admin/studio" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
                       Content Studio
                     </Link>
                   </>
+                )}
+                {session.user.role !== 'admin' && (
+                  <Link href="/profile" className="block px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700" onClick={() => setUserMenuOpen(false)}>
+                    Profile
+                  </Link>
                 )}
                 <button
                   onClick={() => { signOut(); setUserMenuOpen(false) }}
@@ -346,13 +355,13 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
                   </Link>
                 )}
                 <Link
-                  href="/profile"
+                  href={profileHref}
                   onClick={() => setMenuOpen(false)}
                   className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
                     theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
                   }`}
                 >
-                  <User size={14} /> Profile
+                  <User size={14} /> {session.user.role === 'admin' ? 'Admin Profile' : 'Profile'}
                 </Link>
                 <button
                   onClick={() => { signOut(); setMenuOpen(false) }}
