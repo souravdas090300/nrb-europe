@@ -160,8 +160,8 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           <NrbLogo height={26} className="dark:invert" />
         </Link>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-2 shrink-0">
+        {/* Navigation (desktop only) */}
+        <nav className="hidden md:flex items-center gap-2 shrink-0">
           <Link href={`/${lang}`} className={linkClass}>
             {dictionary?.nav?.home || 'Home'}
           </Link>
@@ -244,8 +244,8 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           </button>
         </form>
 
-        {/* Language Switcher */}
-        <div className="shrink-0">
+        {/* Language Switcher (desktop only) */}
+        <div className="shrink-0 hidden md:block">
           <LanguageSwitcher />
         </div>
 
@@ -312,6 +312,19 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           }`}
         >
           <div className="flex flex-col gap-2 max-w-[1400px] mx-auto">
+            <Link
+              href={`/${lang}`}
+              onClick={() => setMenuOpen(false)}
+              className={`text-sm font-bold uppercase flex items-center gap-2 py-1 no-underline hover:text-red-600 ${
+                theme === 'dark' ? 'text-gray-200' : 'text-gray-900'
+              }`}
+            >
+              {dictionary?.nav?.home || 'Home'}
+            </Link>
+            <div className="w-fit">
+              <LanguageSwitcher />
+            </div>
+            <hr className={`my-1 border-t ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'}`} />
             {session ? (
               <>
                 <div className="px-2 py-2 mb-1 border-b border-gray-200 dark:border-gray-700 md:hidden">
