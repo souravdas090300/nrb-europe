@@ -215,11 +215,11 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
 
         <div className="flex-1 min-w-2" />
 
-        {/* Search form */}
+        {/* Search form (desktop only) */}
         <form
           action={`/${lang}/search`}
           method="GET"
-          className={`shrink-0 inline-flex items-center h-7 rounded-full border px-2 ${
+          className={`shrink-0 hidden md:inline-flex items-center h-7 rounded-full border px-2 ${
             theme === 'dark' ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-gray-100'
           }`}
         >
@@ -312,6 +312,33 @@ const Header = ({ lang, dictionary }: { lang: Locale; dictionary: any }) => {
           }`}
         >
           <div className="flex flex-col gap-2 max-w-[1400px] mx-auto">
+            <form
+              action={`/${lang}/search`}
+              method="GET"
+              className={`md:hidden shrink-0 inline-flex items-center h-9 rounded-full border px-3 ${
+                theme === 'dark' ? 'border-gray-600 bg-gray-800' : 'border-gray-300 bg-gray-100'
+              }`}
+            >
+              <input
+                type="text"
+                name="q"
+                placeholder={dictionary?.common?.searchPlaceholder || 'Search articles...'}
+                className={`flex-1 border-none bg-transparent outline-none text-[12px] ${
+                  theme === 'dark'
+                    ? 'text-gray-300 placeholder:text-gray-500'
+                    : 'text-gray-700 placeholder:text-gray-400'
+                }`}
+              />
+              <button
+                type="submit"
+                aria-label={dictionary?.common?.search || 'Search'}
+                className={`w-6 h-6 inline-flex items-center justify-center rounded-full bg-transparent border-none cursor-pointer ${
+                  theme === 'dark' ? 'text-gray-400' : 'text-gray-500'
+                }`}
+              >
+                <Search size={14} />
+              </button>
+            </form>
             <Link
               href={`/${lang}`}
               onClick={() => setMenuOpen(false)}
